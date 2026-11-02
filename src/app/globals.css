@@ -1,16 +1,133 @@
 @import "tailwindcss";
 
+/* ── Tokens: DESIGN.md "Executive Service Operations" ───────────── */
+/* Fuentes: las variables de next/font viven en <body>, por eso se resuelven ahí (ver @layer base). */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-geist-sans), var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-body {
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+/* Colores: @theme normal para que existan como variables CSS en :root */
+@theme {
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1e40af;
+  --color-primary-active: #1e3a8a;
+  --color-primary-focus: #2563eb;
+  --color-ink: #0f172a;
+  --color-ink-2: #1e293b;
+  --color-steel: #475569;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
+  --color-canvas: #f8fafc;
 }
 
-/* Foco visible para navegación por teclado */
-:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
+@layer base {
+  body {
+    --app-sans: var(--font-inter), system-ui, sans-serif;
+    --app-display: var(--font-geist-sans), var(--font-inter), system-ui, sans-serif;
+    --app-mono: var(--font-geist-mono), ui-monospace, monospace;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--app-sans);
+    font-size: 13px;
+    line-height: 18px;
+  }
+  h1, h2, h3, h4 { font-family: var(--app-display); letter-spacing: -0.01em; }
+  :focus-visible { outline: 2px solid var(--color-primary-focus); outline-offset: 2px; }
+  input[type="radio"], input[type="checkbox"] { accent-color: var(--color-primary); }
+}
+
+@layer components {
+  /* Tipografía funcional */
+  .font-display { font-family: var(--app-display); }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .label-caps {
+    font-family: var(--app-display);
+    font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--color-steel);
+  }
+  .ticket-id {
+    font-family: var(--app-mono); font-variant-numeric: tabular-nums;
+    font-weight: 600; letter-spacing: -0.01em;
+  }
+
+  /* Paneles (Tier 1) */
+  .panel { background: #fff; border: 1px solid var(--color-line); border-radius: 0.5rem; }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    min-height: 40px; padding: 0 1.25rem; border-bottom: 1px solid #f1f5f9;
+    font-family: var(--app-display); font-size: 14px; font-weight: 600;
+  }
+  .panel-body { padding: 1.25rem; }
+  .elevated { box-shadow: 0 1px 3px 0 rgba(15,23,42,.06), 0 1px 2px -1px rgba(15,23,42,.04); }
+
+  /* Botones */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+    height: 32px; padding: 0 0.75rem; border-radius: 0.25rem; border: 1px solid transparent;
+    font-family: var(--app-display); font-size: 13px; font-weight: 500; white-space: nowrap;
+    transition: background-color .12s, border-color .12s, color .12s;
+  }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-lg { height: 36px; padding: 0 1rem; }
+  .btn-primary { background: var(--color-primary); border-color: var(--color-primary-hover); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); }
+  .btn-primary:active:not(:disabled) { background: var(--color-primary-active); }
+  .btn-secondary { background: #fff; border-color: var(--color-line-strong); color: var(--color-ink); }
+  .btn-secondary:hover:not(:disabled) { background: var(--color-canvas); border-color: #94a3b8; }
+  .btn-danger { background: #fff; border-color: #fecaca; color: #b91c1c; }
+  .btn-danger:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
+  .btn-ghost { background: transparent; color: var(--color-steel); }
+  .btn-ghost:hover:not(:disabled) { background: #f1f5f9; color: var(--color-ink); }
+  .btn-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 0.25rem; color: var(--color-steel);
+  }
+  .btn-icon:hover { background: #f1f5f9; color: var(--color-ink); }
+
+  /* Campos */
+  .input {
+    height: 32px; padding: 0 0.5rem; background: #fff; color: var(--color-ink);
+    border: 1px solid var(--color-line-strong); border-radius: 0.25rem; font-size: 13px;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  textarea.input { height: auto; padding: 0.5rem; line-height: 20px; }
+  .input:hover { border-color: #94a3b8; }
+  .input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+  .input[aria-invalid="true"] { border-color: #dc2626; }
+  .input[aria-invalid="true"]:focus { box-shadow: 0 0 0 1px #ef4444; }
+  .field-label { display: block; margin-bottom: 0.25rem; font-family: var(--app-display); font-size: 12px; font-weight: 500; color: var(--color-ink-2); }
+
+  /* Insignias: 20px, rectas */
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.375rem; height: 20px; padding: 0 6px;
+    border: 1px solid; border-radius: 3px; white-space: nowrap;
+    font-family: var(--app-display); font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; font-variant-numeric: tabular-nums;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 9999px; flex: none; }
+  .counter {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px;
+    padding: 0 6px; border-radius: 9999px; font-family: var(--app-mono); font-size: 11px; font-weight: 600;
+    font-variant-numeric: tabular-nums; background: #e2e8f0; color: var(--color-ink-2);
+  }
+
+  /* Tablas densas */
+  .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+  .data-table th {
+    height: 36px; padding: 0 0.75rem; background: var(--color-canvas); border-bottom: 1px solid var(--color-line-strong);
+    font-family: var(--app-display); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--color-steel);
+  }
+  .data-table td { height: 44px; padding: 0.375rem 0.75rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  .data-table tbody tr:hover { background: var(--color-canvas); }
+
+  /* Íconos Material Symbols */
+  .icon {
+    font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal; line-height: 1;
+    letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr;
+    -webkit-font-smoothing: antialiased; font-feature-settings: "liga"; user-select: none; flex: none;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+  }
 }

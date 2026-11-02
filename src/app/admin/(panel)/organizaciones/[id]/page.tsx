@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { FIELD_TYPE_LABEL } from "@/lib/constants";
+import { Breadcrumb, PageTitle } from "@/components/PageHeader";
+import { Icon } from "@/components/Icon";
 import { addCatalogItem, addField, deleteCatalogItem, deleteField, moveField, toggleFieldRequired, updateOrganization } from "../../../actions";
 import { OrgForm } from "../OrgForm";
 
@@ -20,66 +22,63 @@ export default async function OrganizacionDetalle({ params }: { params: Promise<
   if (!org) notFound();
 
   return (
-    <div className="space-y-6">
-      <Link href="/admin/organizaciones" className="text-sm text-slate-600 hover:underline">← Organizaciones</Link>
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{org.name}</h1>
-        <Link href={`/solicitud/${org.slug}`} target="_blank" className="text-sm text-blue-700 hover:underline">Ver formulario público ↗</Link>
-      </div>
+    <div className="space-y-5">
+      <Breadcrumb items={[{ label: "Organizaciones", href: "/admin/organizaciones", icon: "domain" }, { label: org.name }]} />
+      <PageTitle
+        title={<span className="flex items-center gap-2.5"><span className="h-7 w-1.5 rounded-sm" style={{ backgroundColor: org.themeColor }} aria-hidden />{org.name}</span>}
+        subtitle="Textos, catálogos y preguntas del formulario público."
+        actions={<Link href={`/solicitud/${org.slug}`} target="_blank" className="btn btn-secondary"><Icon name="open_in_new" size={16} />Ver formulario</Link>}
+      />
 
-      <OrgForm action={updateOrganization.bind(null, org.id)} org={org} submitLabel="Guardar" />
+      <section className="panel">
+        <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="description" size={16} className="text-primary" />Datos y textos</span></div>
+        <OrgForm action={updateOrganization.bind(null, org.id)} org={org} submitLabel="Guardar" />
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Catalog title="Áreas" kind="area" orgId={org.id} items={org.areas} />
         <Catalog title="Tipos de solicitud" kind="type" orgId={org.id} items={org.requestTypes} />
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-5 text-sm">
-        <h2 className="mb-1 text-lg font-semibold">Campos adicionales del ticket</h2>
-        <p className="mb-4 text-slate-500">
-          Siempre se piden: correo, nombre, área, tipo de solicitud, descripción y fecha tentativa. Aquí puedes agregar más preguntas.
-        </p>
-        <ul className="mb-5 divide-y divide-slate-100 rounded border border-slate-200">
-          {org.fields.map((f, i) => (
-            <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
-              <div>
-                <span className="font-medium">{f.label}</span> {f.required && <span className="text-red-700">*</span>}
-                <div className="text-xs text-slate-500">
-                  {FIELD_TYPE_LABEL[f.type]}{f.options.length > 0 && `: ${f.options.join(", ")}`}
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <form action={moveField.bind(null, f.id, org.id, -1)}><button disabled={i === 0} aria-label="Subir" className="rounded border px-2 py-1 disabled:opacity-30">↑</button></form>
-                <form action={moveField.bind(null, f.id, org.id, 1)}><button disabled={i === org.fields.length - 1} aria-label="Bajar" className="rounded border px-2 py-1 disabled:opacity-30">↓</button></form>
-                <form action={toggleFieldRequired.bind(null, f.id, org.id)}>
-                  <button className="rounded border px-2 py-1">{f.required ? "Hacer opcional" : "Hacer obligatorio"}</button>
-                </form>
-                <form action={deleteField.bind(null, f.id, org.id)}>
-                  <button className="rounded border border-red-200 px-2 py-1 text-red-700">Eliminar</button>
-                </form>
-              </div>
-            </li>
-          ))}
-          {org.fields.length === 0 && <li className="p-3 text-slate-500">Sin campos adicionales.</li>}
-        </ul>
-        <form action={addField.bind(null, org.id)} className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-slate-600">Pregunta *</span>
-            <input name="label" required className="w-full rounded border border-slate-300 px-3 py-2" />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-slate-600">Tipo</span>
-            <select name="type" className="w-full rounded border border-slate-300 px-3 py-2">
-              {Object.entries(FIELD_TYPE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
-          </label>
-          <label className="block sm:col-span-2">
-            <span className="mb-1 block text-slate-600">Opciones (solo lista desplegable, una por línea)</span>
-            <textarea name="options" rows={3} className="w-full rounded border border-slate-300 px-3 py-2" />
-          </label>
-          <label className="flex items-center gap-2"><input type="checkbox" name="required" /> Obligatoria</label>
-          <div className="sm:text-right"><button className="rounded bg-slate-800 px-4 py-2 text-white">Agregar campo</button></div>
-        </form>
+      <section className="panel">
+        <div className="panel-header">
+          <span className="flex items-center gap-1.5"><Icon name="tag" size={16} className="text-primary" />Campos adicionales del ticket</span>
+          <span className="counter">{org.fields.length}</span>
+        </div>
+        <div className="space-y-4 p-5">
+          <p className="text-steel">Siempre se piden: descripción, tipo de solicitud, evidencia (opcional), nombre, correo, área y fecha tentativa. Aquí puedes agregar más preguntas.</p>
+          {org.fields.length > 0 && (
+            <table className="data-table rounded border border-line">
+              <thead><tr><th>Pregunta</th><th className="w-48">Tipo</th><th className="w-72 text-right">Acciones</th></tr></thead>
+              <tbody>
+                {org.fields.map((f, i) => (
+                  <tr key={f.id}>
+                    <td><span className="font-medium">{f.label}</span> {f.required && <span className="badge ml-1 border-[#fecaca] bg-[#fef2f2] text-[#991b1b]">Obligatoria</span>}</td>
+                    <td className="text-[12px] text-steel">{FIELD_TYPE_LABEL[f.type]}{f.options.length > 0 && `: ${f.options.join(", ")}`}</td>
+                    <td>
+                      <div className="flex justify-end gap-1">
+                        <form action={moveField.bind(null, f.id, org.id, -1)}><button disabled={i === 0} aria-label="Subir" className="btn btn-secondary h-7 px-2">↑</button></form>
+                        <form action={moveField.bind(null, f.id, org.id, 1)}><button disabled={i === org.fields.length - 1} aria-label="Bajar" className="btn btn-secondary h-7 px-2">↓</button></form>
+                        <form action={toggleFieldRequired.bind(null, f.id, org.id)}><button className="btn btn-secondary h-7 px-2 text-[12px]">{f.required ? "Hacer opcional" : "Hacer obligatoria"}</button></form>
+                        <form action={deleteField.bind(null, f.id, org.id)}><button className="btn btn-danger h-7 px-2 text-[12px]">Eliminar</button></form>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <form action={addField.bind(null, org.id)} className="grid gap-3 rounded border border-dashed border-line-strong bg-canvas p-4 sm:grid-cols-2">
+            <label className="block"><span className="field-label">Pregunta *</span><input name="label" required className="input w-full" /></label>
+            <label className="block">
+              <span className="field-label">Tipo</span>
+              <select name="type" className="input w-full">{Object.entries(FIELD_TYPE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+            </label>
+            <label className="block sm:col-span-2"><span className="field-label">Opciones (solo lista desplegable, una por línea)</span><textarea name="options" rows={3} className="input w-full" /></label>
+            <label className="flex items-center gap-2"><input type="checkbox" name="required" /> Obligatoria</label>
+            <div className="sm:text-right"><button className="btn btn-primary"><Icon name="add" size={16} />Agregar campo</button></div>
+          </form>
+        </div>
       </section>
     </div>
   );
@@ -87,23 +86,25 @@ export default async function OrganizacionDetalle({ params }: { params: Promise<
 
 function Catalog({ title, kind, orgId, items }: { title: string; kind: "area" | "type"; orgId: string; items: { id: string; name: string }[] }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 text-sm">
-      <h2 className="mb-3 text-lg font-semibold">{title}</h2>
-      <ul className="mb-3 divide-y divide-slate-100 rounded border border-slate-200">
-        {items.map((it) => (
-          <li key={it.id} className="flex items-center justify-between p-2 pl-3">
-            {it.name}
-            <form action={deleteCatalogItem.bind(null, kind, it.id, orgId)}>
-              <button className="text-xs text-red-700 hover:underline">Quitar</button>
-            </form>
-          </li>
-        ))}
-        {items.length === 0 && <li className="p-3 text-slate-500">Vacío: agrega al menos una opción.</li>}
-      </ul>
-      <form action={addCatalogItem.bind(null, kind, orgId)} className="flex gap-2">
-        <input name="name" required placeholder="Nueva opción" aria-label={`Nueva opción de ${title}`} className="flex-1 rounded border border-slate-300 px-3 py-1.5" />
-        <button className="rounded bg-slate-800 px-3 py-1.5 text-white">Agregar</button>
-      </form>
+    <section className="panel">
+      <div className="panel-header"><span>{title}</span><span className="counter">{items.length}</span></div>
+      <div className="space-y-3 p-4">
+        <ul className="divide-y divide-[#f1f5f9] rounded border border-line">
+          {items.map((it) => (
+            <li key={it.id} className="flex h-9 items-center justify-between pl-3 pr-1">
+              {it.name}
+              <form action={deleteCatalogItem.bind(null, kind, it.id, orgId)}>
+                <button className="btn-icon hover:!text-[#b91c1c]" aria-label={`Quitar ${it.name}`}><Icon name="close" size={16} /></button>
+              </form>
+            </li>
+          ))}
+          {items.length === 0 && <li className="p-3 text-muted">Vacío: agrega al menos una opción.</li>}
+        </ul>
+        <form action={addCatalogItem.bind(null, kind, orgId)} className="flex gap-2">
+          <input name="name" required placeholder="Nueva opción" aria-label={`Nueva opción de ${title}`} className="input flex-1" />
+          <button className="btn btn-primary"><Icon name="add" size={16} />Agregar</button>
+        </form>
+      </div>
     </section>
   );
 }

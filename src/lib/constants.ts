@@ -11,12 +11,14 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
   BAJA: "Baja",
 };
 
-/** Clases Tailwind por prioridad: badge, punto y borde */
-export const PRIORITY_STYLE: Record<Priority, { badge: string; dot: string; border: string }> = {
-  URGENTE: { badge: "bg-red-100 text-red-800", dot: "bg-red-600", border: "border-l-red-600" },
-  ALTA: { badge: "bg-orange-100 text-orange-800", dot: "bg-orange-500", border: "border-l-orange-500" },
-  MEDIA: { badge: "bg-amber-100 text-amber-800", dot: "bg-amber-400", border: "border-l-amber-400" },
-  BAJA: { badge: "bg-slate-100 text-slate-700", dot: "bg-slate-400", border: "border-l-slate-400" },
+export const PRIORITY_CODE: Record<Priority, string> = { URGENTE: "P1", ALTA: "P2", MEDIA: "P3", BAJA: "P4" };
+
+/** Severidades según DESIGN.md: contenedor tenue + borde + punto. */
+export const PRIORITY_STYLE: Record<Priority, { badge: string; dot: string; border: string; text: string; soft: string }> = {
+  URGENTE: { badge: "bg-[#fef2f2] text-[#991b1b] border-[#f87171]", dot: "bg-[#dc2626]", border: "border-l-[#dc2626]", text: "text-[#b91c1c]", soft: "bg-[#fef2f2] border-[#fecaca]" },
+  ALTA: { badge: "bg-[#fffbeb] text-[#92400e] border-[#fcd34d]", dot: "bg-[#d97706]", border: "border-l-[#d97706]", text: "text-[#b45309]", soft: "bg-[#fffbeb] border-[#fde68a]" },
+  MEDIA: { badge: "bg-[#eff6ff] text-[#1e40af] border-[#93c5fd]", dot: "bg-[#1d4ed8]", border: "border-l-[#1d4ed8]", text: "text-[#1d4ed8]", soft: "bg-[#eff6ff] border-[#bfdbfe]" },
+  BAJA: { badge: "bg-[#f0fdf4] text-[#166534] border-[#86efac]", dot: "bg-[#16a34a]", border: "border-l-[#16a34a]", text: "text-[#15803d]", soft: "bg-[#f0fdf4] border-[#bbf7d0]" },
 };
 
 export const STATUS_LABEL: Record<Status, string> = {
@@ -27,12 +29,12 @@ export const STATUS_LABEL: Record<Status, string> = {
   CERRADO: "Cerrado",
 };
 
-export const STATUS_STYLE: Record<Status, string> = {
-  NUEVO: "bg-sky-100 text-sky-800",
-  EN_PROGRESO: "bg-indigo-100 text-indigo-800",
-  EN_ESPERA: "bg-yellow-100 text-yellow-800",
-  RESUELTO: "bg-emerald-100 text-emerald-800",
-  CERRADO: "bg-slate-200 text-slate-700",
+export const STATUS_STYLE: Record<Status, { badge: string; dot: string }> = {
+  NUEVO: { badge: "bg-white text-[#0f172a] border-[#cbd5e1]", dot: "bg-[#1d4ed8]" },
+  EN_PROGRESO: { badge: "bg-[#eff6ff] text-[#1e40af] border-[#bfdbfe]", dot: "bg-[#1d4ed8]" },
+  EN_ESPERA: { badge: "bg-[#fffbeb] text-[#92400e] border-[#fde68a]", dot: "bg-[#d97706]" },
+  RESUELTO: { badge: "bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]", dot: "bg-[#16a34a]" },
+  CERRADO: { badge: "bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]", dot: "bg-[#94a3b8]" },
 };
 
 export const FIELD_TYPE_LABEL: Record<FieldType, string> = {
@@ -103,4 +105,55 @@ export function parseTicketCode(input: string): number | null {
   const m = input.trim().match(/^(?:t-?|#)?0*(\d{1,9})$/i);
   const n = m ? Number(m[1]) : NaN;
   return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+// ── Tiempo ────────────────────────────────────────────────
+const TZ = "America/Mexico_City";
+
+/** Fecha de hoy en CDMX como "YYYY-MM-DD". */
+export function todayISO() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: TZ });
+}
+
+/** "hace 2 h 15 min", "hace 3 días" */
+export function relativeTime(d: Date, now = new Date()) {
+  const min = Math.max(0, Math.round((now.getTime() - d.getTime()) / 60000));
+  if (min < 1) return "hace un momento";
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h} h${min % 60 ? ` ${min % 60} min` : ""}`;
+  const days = Math.floor(h / 24);
+  return days === 1 ? "hace 1 día" : `hace ${days} días`;
+}
+
+export type DueTone = "none" | "ok" | "warn" | "danger" | "done";
+
+/** Estado de la fecha tentativa de entrega respecto a hoy (CDMX). */
+export function dueInfo(due: Date | null, status: Status): { tone: DueTone; label: string; days: number | null } {
+  if (!due) return { tone: "none", label: "Sin fecha", days: null };
+  const days = Math.round((Date.parse(toISODate(due)) - Date.parse(todayISO())) / 86400000);
+  if (status === "RESUELTO" || status === "CERRADO") return { tone: "done", label: "Cerrado", days };
+  if (days < 0) return { tone: "danger", label: days === -1 ? "Venció ayer" : `Vencido hace ${-days} días`, days };
+  if (days === 0) return { tone: "warn", label: "Vence hoy", days };
+  if (days === 1) return { tone: "warn", label: "Vence mañana", days };
+  if (days <= 3) return { tone: "warn", label: `En ${days} días`, days };
+  return { tone: "ok", label: `En ${days} días`, days };
+}
+
+export const DUE_TONE_STYLE: Record<DueTone, string> = {
+  none: "bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]",
+  ok: "bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]",
+  warn: "bg-[#fffbeb] text-[#92400e] border-[#fde68a]",
+  danger: "bg-[#fef2f2] text-[#991b1b] border-[#fecaca]",
+  done: "bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]",
+};
+
+export function initials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "?";
+}
+
+/** Primera línea de la descripción como título del ticket. */
+export function ticketTitle(description: string, max = 90) {
+  const first = description.split(/\n/)[0].trim();
+  return first.length > max ? `${first.slice(0, max - 1)}…` : first;
 }

@@ -1,41 +1,57 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { OPEN_STATUSES } from "@/lib/constants";
+import { Breadcrumb, PageTitle } from "@/components/PageHeader";
+import { Icon } from "@/components/Icon";
 import { createOrganization } from "../../actions";
 import { OrgForm } from "./OrgForm";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Organizaciones" };
 
 export default async function Organizaciones() {
   const orgs = await prisma.organization.findMany({
     orderBy: { name: "asc" },
-    include: { _count: { select: { tickets: true } } },
+    include: { _count: { select: { tickets: true, areas: true, requestTypes: true } } },
   });
+  const open = await prisma.ticket.groupBy({ by: ["organizationId"], where: { status: { in: OPEN_STATUSES } }, _count: true });
+  const openBy = Object.fromEntries(open.map((o) => [o.organizationId, o._count]));
+
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <section>
-        <h1 className="mb-3 text-2xl font-semibold">Organizaciones</h1>
-        <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
-          {orgs.map((o) => (
-            <li key={o.id} className="flex items-center justify-between gap-3 p-4">
-              <div className="flex items-center gap-3">
-                <span className="h-4 w-4 rounded-full" style={{ backgroundColor: o.themeColor }} aria-hidden />
-                <div>
-                  <Link href={`/admin/organizaciones/${o.id}`} className="font-medium hover:underline">{o.name}</Link>
-                  <div className="text-xs text-slate-500">
-                    /solicitud/{o.slug} · {o._count.tickets} tickets {!o.active && "· inactiva"}
-                  </div>
-                </div>
-              </div>
-              <Link href={`/admin/organizaciones/${o.id}`} className="text-sm text-blue-700 hover:underline">Configurar</Link>
-            </li>
-          ))}
-          {orgs.length === 0 && <li className="p-6 text-center text-slate-500">Aún no hay organizaciones.</li>}
-        </ul>
-      </section>
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Dar de alta organización</h2>
-        <OrgForm action={createOrganization} submitLabel="Crear organización" />
-      </section>
+    <div className="space-y-5">
+      <Breadcrumb items={[{ label: "Operaciones" }, { label: "Organizaciones", icon: "domain" }]} />
+      <PageTitle title="Organizaciones" subtitle="Cada organización tiene su formulario público, catálogos y campos propios." />
+      <div className="grid gap-6 xl:grid-cols-12">
+        <section className="panel overflow-hidden xl:col-span-7">
+          <table className="data-table">
+            <thead><tr><th>Organización</th><th className="w-24">Abiertos</th><th className="w-24">Total</th><th className="w-28">Estado</th><th className="w-24" /></tr></thead>
+            <tbody>
+              {orgs.map((o) => (
+                <tr key={o.id}>
+                  <td>
+                    <div className="flex items-center gap-2.5">
+                      <span className="h-6 w-1 rounded-sm" style={{ backgroundColor: o.themeColor }} aria-hidden />
+                      <div>
+                        <Link href={`/admin/organizaciones/${o.id}`} className="font-display font-semibold hover:text-primary hover:underline">{o.name}</Link>
+                        <div className="font-mono text-[11px] text-muted">/solicitud/{o.slug} · {o._count.areas} áreas · {o._count.requestTypes} tipos</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="tnum font-mono">{openBy[o.id] ?? 0}</td>
+                  <td className="tnum font-mono">{o._count.tickets}</td>
+                  <td>{o.active ? <span className="badge border-[#bbf7d0] bg-[#f0fdf4] text-[#166534]">Activa</span> : <span className="badge border-line bg-[#f1f5f9] text-steel">Inactiva</span>}</td>
+                  <td className="text-right"><Link href={`/admin/organizaciones/${o.id}`} className="btn btn-secondary h-7 px-2 text-[12px]">Configurar</Link></td>
+                </tr>
+              ))}
+              {orgs.length === 0 && <tr><td colSpan={5} className="!h-24 text-center text-muted">Aún no hay organizaciones.</td></tr>}
+            </tbody>
+          </table>
+        </section>
+        <section className="panel xl:col-span-5">
+          <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="add" size={16} className="text-primary" />Dar de alta organización</span></div>
+          <OrgForm action={createOrganization} submitLabel="Crear organización" />
+        </section>
+      </div>
     </div>
   );
 }

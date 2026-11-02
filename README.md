@@ -6,9 +6,20 @@ Sistema de solicitudes de soporte con Next.js 15, Prisma y PostgreSQL.
 - **`/solicitud/<organizacion>`**: formulario público. Primero pide la descripción del problema, luego el tipo (con la opción "Mi problema no está en la lista"), la evidencia (archivos) y los datos de contacto.
 - **`/seguimiento`**: el solicitante consulta su ticket con el **ID** (`T-00012`) y su correo, o con el enlace privado `/seguimiento/<token>` que recibe al enviarlo. Ahí ve el estado, la conversación y puede responder con más archivos.
 - **`/admin`**: administración protegida con contraseña:
-  - tickets: filtros (incluye "Pendientes de respuesta"), cambio rápido de estado desde la lista, prioridad y fecha de entrega;
+  - pila de tickets: indicadores por severidad, filtros (pendientes de respuesta, vencidos) y cambio rápido de estado;
+  - calendario de entregas: filtros por prioridad, cumplimiento de fechas, tickets vencidos, compromisos del día y reprogramación con motivo;
   - hilo de cada ticket: respuestas al solicitante y notas internas, con archivos adjuntos; cada cambio de estado, prioridad o fecha queda registrado en el hilo;
   - organizaciones: alta, textos del formulario, color, áreas, tipos de solicitud y campos adicionales.
+
+## Diseño
+
+La interfaz sigue la guía **"Executive Service Operations"** (estilo de consola ITSM):
+- **Colores**: primario cobalto `#1d4ed8`; severidades P1 rojo, P2 ámbar, P3 cobalto y P4 verde. El color se usa solo para comunicar estado.
+- **Tipografía**: Geist para títulos, etiquetas e IDs; Inter para textos; números tabulares.
+- **Formas**: radio de 4 px en controles y 8 px en paneles, sin píldoras salvo en contadores, y bordes finos en lugar de sombras.
+- **Íconos**: Material Symbols. Solo se descargan los listados en `src/components/Icon.tsx`.
+
+Los tokens y las clases de componentes (`btn`, `input`, `badge`, `panel`, `data-table`…) están en `src/app/globals.css`.
 
 ## Arranque local
 

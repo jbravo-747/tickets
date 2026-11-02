@@ -10,7 +10,7 @@ export function StatusSelect({ status, action }: { status: Status; action: (fd: 
       <select
         name="status" defaultValue={status} aria-label="Estado"
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className={`cursor-pointer rounded-full border-0 px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[status]}`}
+        className={`badge cursor-pointer pr-1 ${STATUS_STYLE[status].badge}`}
       >
         {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
       </select>

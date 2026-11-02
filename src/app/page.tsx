@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { OPEN_STATUSES, PRIORITIES, PRIORITY_LABEL, PRIORITY_STYLE, formatDate, ticketCode } from "@/lib/constants";
+import { OPEN_STATUSES, PRIORITIES, PRIORITY_CODE, PRIORITY_LABEL, PRIORITY_STYLE, formatDate, relativeTime, ticketTitle, todayISO } from "@/lib/constants";
 import { PublicHeader } from "@/components/PublicHeader";
-import { PriorityBadge, StatusBadge } from "@/components/Badges";
+import { DueBadge, PriorityBadge, StatusBadge, TicketId } from "@/components/Badges";
 import { Calendar } from "@/components/Calendar";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { Kpi } from "@/components/PageHeader";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +15,7 @@ type SP = Promise<{ org?: string; mes?: string }>;
 
 export default async function Dashboard({ searchParams }: { searchParams: SP }) {
   const { org, mes } = await searchParams;
-  const month = mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(mes)
-    ? mes
-    : new Date().toLocaleDateString("en-CA", { timeZone: "America/Mexico_City" }).slice(0, 7);
+  const month = mes && /^\d{4}-(0[1-9]|1[0-2])$/.test(mes) ? mes : todayISO().slice(0, 7);
 
   const orgs = await prisma.organization.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { slug: true, name: true } });
   const orgFilter: Prisma.TicketWhereInput = org ? { organization: { slug: org } } : { organization: { active: true } };
@@ -49,66 +49,66 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
     const s = q.toString();
     return s ? `/?${s}` : "/";
   };
+  const tones = { URGENTE: "p1", ALTA: "p2", MEDIA: "p3", BAJA: "p4" } as const;
 
   return (
     <>
       <PublicHeader />
       <AutoRefresh seconds={60} />
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+      <main className="mx-auto max-w-7xl space-y-5 px-4 py-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold">Tablero de solicitudes</h1>
-            <p className="text-sm text-slate-600">Pila de trabajo pendiente ordenada por prioridad. Se actualiza cada minuto.</p>
+            <h1 className="text-[22px] font-semibold leading-7 tracking-tight sm:text-[28px] sm:leading-9">Tablero de solicitudes</h1>
+            <p className="mt-0.5 flex items-center gap-1.5 text-steel"><span className="h-2 w-2 rounded-full bg-[#16a34a]" />Pila de trabajo pendiente por severidad · se actualiza cada minuto</p>
           </div>
           {orgs.length > 1 && (
-            <nav aria-label="Filtrar por organización" className="flex flex-wrap gap-1 text-sm">
-              <Link href={href({ org: undefined })} className={`rounded-full border px-3 py-1 ${!org ? "border-slate-800 bg-slate-800 text-white" : "border-slate-300 bg-white"}`}>Todas</Link>
+            <nav aria-label="Filtrar por organización" className="flex flex-wrap gap-1.5">
+              <Link href={href({ org: undefined })} className={`btn h-8 ${!org ? "border-primary bg-[#eff6ff] text-primary-hover" : "btn-secondary"}`}>Todas</Link>
               {orgs.map((o) => (
-                <Link key={o.slug} href={href({ org: o.slug })} className={`rounded-full border px-3 py-1 ${org === o.slug ? "border-slate-800 bg-slate-800 text-white" : "border-slate-300 bg-white"}`}>{o.name}</Link>
+                <Link key={o.slug} href={href({ org: o.slug })} className={`btn h-8 ${org === o.slug ? "border-primary bg-[#eff6ff] text-primary-hover" : "btn-secondary"}`}>{o.name}</Link>
               ))}
             </nav>
           )}
         </div>
 
         <section aria-label="Resumen por prioridad" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {PRIORITIES.map((p) => (
-            <div key={p} className={`rounded-lg border border-l-4 border-slate-200 bg-white p-4 ${PRIORITY_STYLE[p].border}`}>
-              <div className="text-sm text-slate-600">{PRIORITY_LABEL[p]}</div>
-              <div className="text-3xl font-semibold">{countBy[p] ?? 0}</div>
-            </div>
-          ))}
+          {PRIORITIES.map((p) => <Kpi key={p} label={`${PRIORITY_CODE[p]} · ${PRIORITY_LABEL[p]}`} value={countBy[p] ?? 0} tone={tones[p]} />)}
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          <section aria-labelledby="queue-title" className="lg:col-span-3">
-            <h2 id="queue-title" className="mb-2 text-lg font-semibold">Pila de solicitudes ({queue.length})</h2>
+        <div className="grid gap-6 xl:grid-cols-12">
+          <section aria-labelledby="queue-title" className="panel overflow-hidden xl:col-span-6">
+            <div className="panel-header">
+              <h2 id="queue-title" className="flex items-center gap-1.5 text-[14px]"><Icon name="inbox" size={16} className="text-primary" />Pila de solicitudes</h2>
+              <span className="counter">{queue.length}</span>
+            </div>
             {queue.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">No hay solicitudes pendientes.</p>
+              <p className="flex items-center justify-center gap-2 p-10 text-muted"><Icon name="task_alt" size={18} />No hay solicitudes pendientes.</p>
             ) : (
-              <ol className="space-y-2">
+              <ol className="divide-y divide-[#f1f5f9]">
                 {queue.map((t, i) => (
-                  <li key={t.id} className={`rounded-lg border border-l-4 border-slate-200 bg-white p-3 ${PRIORITY_STYLE[t.priority].border}`}>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span className="text-slate-400">{i + 1}.</span>
-                      <span className="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-xs font-semibold text-white">{ticketCode(t.folio)}</span>
-                      <PriorityBadge priority={t.priority} />
+                  <li key={t.id} className={`border-l-2 px-4 py-3 ${PRIORITY_STYLE[t.priority].border}`}>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="tnum w-6 font-mono text-[11px] text-muted">{i + 1}.</span>
+                      <TicketId folio={t.folio} />
+                      <PriorityBadge priority={t.priority} short />
                       <StatusBadge status={t.status} />
-                      <span>{t.requestType}</span>
+                      <DueBadge due={t.dueDate} status={t.status} />
                     </div>
-                    <p className="mt-1 line-clamp-2 font-medium">{t.description}</p>
-                    <div className="mt-1 flex flex-wrap gap-x-4 text-xs text-slate-500">
+                    <p className="font-display mt-1.5 line-clamp-2 text-[14px] font-medium leading-5">{ticketTitle(t.description, 200)}</p>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] text-muted">
                       {!org && <span>{t.organization.name}</span>}
-                      <span>Área: {t.areaName}</span>
-                      <span>Recibida: {formatDate(t.createdAt)}</span>
-                      <span>Entrega tentativa: {formatDate(t.dueDate)}</span>
+                      <span>{t.areaName}</span>
+                      <span>{t.requestType}</span>
+                      <span className="tnum">Recibida {relativeTime(t.createdAt)}</span>
+                      {t.dueDate && <span className="tnum">Entrega {formatDate(t.dueDate)}</span>}
                     </div>
                   </li>
                 ))}
               </ol>
             )}
           </section>
-          <div className="lg:col-span-2">
-            <Calendar month={month} items={calendarItems.filter((c): c is typeof c & { dueDate: Date } => !!c.dueDate)} hrefFor={(mm) => href({ mes: mm })} />
+          <div className="xl:col-span-6">
+            <Calendar month={month} items={calendarItems.filter((c): c is typeof c & { dueDate: Date } => !!c.dueDate)} hrefFor={(mm) => href({ mes: mm })} maxPerDay={2} />
           </div>
         </div>
       </main>

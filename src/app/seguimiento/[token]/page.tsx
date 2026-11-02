@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import { formatDate, formatDateTime, ticketCode } from "@/lib/constants";
+import { dueInfo, formatDate, formatDateTime, relativeTime, ticketCode } from "@/lib/constants";
 import { PublicHeader } from "@/components/PublicHeader";
-import { StatusBadge } from "@/components/Badges";
+import { DueBadge, PriorityBadge, StatusBadge } from "@/components/Badges";
 import { AttachmentList, Thread } from "@/components/Thread";
+import { Icon } from "@/components/Icon";
 import { ReplyBox } from "./ReplyBox";
 
 export const dynamic = "force-dynamic";
@@ -24,44 +25,57 @@ export default async function SeguimientoTicket({ params }: { params: Promise<{ 
     },
   });
   if (!t) notFound();
-  const color = t.organization.themeColor;
+  const due = dueInfo(t.dueDate, t.status);
 
   return (
     <>
       <PublicHeader />
-      <main className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="h-2" style={{ backgroundColor: color }} />
-          <div className="space-y-3 p-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-xl font-semibold">Solicitud <span className="font-mono">{ticketCode(t.folio)}</span></h1>
-              <StatusBadge status={t.status} />
+      <main className="mx-auto max-w-3xl space-y-5 px-4 py-8">
+        <section className="panel overflow-hidden">
+          <div className="h-1.5" style={{ backgroundColor: t.organization.themeColor }} />
+          <div className="space-y-3 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="label-caps">Solicitud · {t.organization.name}</div>
+                <h1 className="ticket-id text-[28px] leading-9 text-primary">{ticketCode(t.folio)}</h1>
+              </div>
+              <div className="flex flex-wrap gap-1.5"><StatusBadge status={t.status} /><PriorityBadge priority={t.priority} /><DueBadge due={t.dueDate} status={t.status} /></div>
             </div>
-            <dl className="grid gap-x-6 gap-y-1 text-sm text-slate-600 sm:grid-cols-2">
-              <div>{t.organization.name} · {t.requestType}</div>
-              <div>Enviada: {formatDateTime(t.createdAt)}</div>
-              <div>Solicitante: {t.requesterName}</div>
-              <div>Entrega tentativa: {formatDate(t.dueDate)}</div>
+            <dl className="grid gap-3 border-y border-[#f1f5f9] py-3 sm:grid-cols-4">
+              <Meta k="Tipo" v={t.requestType} />
+              <Meta k="Área" v={t.areaName} />
+              <Meta k="Enviada" v={<span title={formatDateTime(t.createdAt)}>{relativeTime(t.createdAt)}</span>} />
+              <Meta k="Entrega tentativa" v={t.dueDate ? <>{formatDate(t.dueDate)}{due.tone === "danger" && <span className="block text-[11px] text-[#b91c1c]">{due.label}</span>}</> : "Por definir"} />
             </dl>
-            <div className="rounded-md bg-slate-50 p-4">
-              <p className="whitespace-pre-line text-sm">{t.description}</p>
+            <div>
+              <div className="label-caps mb-1">Tu solicitud</div>
+              <p className="whitespace-pre-line text-[15px] leading-[22px] text-ink-2">{t.description}</p>
               <AttachmentList files={t.attachments} token={token} />
             </div>
           </div>
-        </div>
+        </section>
 
         <section aria-labelledby="hilo" className="space-y-3">
-          <h2 id="hilo" className="text-lg font-semibold">Conversación</h2>
+          <h2 id="hilo" className="flex items-center gap-2 text-[16px] font-semibold"><Icon name="timeline" size={20} className="text-primary" />Seguimiento <span className="counter">{t.messages.length}</span></h2>
           <Thread messages={t.messages} token={token} />
         </section>
 
         {t.status === "CERRADO" ? (
-          <p className="rounded-md bg-slate-100 p-4 text-center text-sm text-slate-600">Esta solicitud está cerrada. Si el problema continúa, envía una nueva solicitud.</p>
+          <p className="panel flex items-center justify-center gap-2 p-4 text-steel"><Icon name="lock" size={16} />Esta solicitud está cerrada. Si el problema continúa, envía una nueva.</p>
         ) : (
-          <ReplyBox token={token} color={color} />
+          <ReplyBox token={token} />
         )}
-        <p className="text-center text-xs text-slate-500">Este enlace es personal: cualquiera que lo tenga puede ver y responder esta solicitud.</p>
+        <p className="flex items-center justify-center gap-1 text-[12px] text-muted"><Icon name="lock" size={14} />Este enlace es personal: cualquiera que lo tenga puede ver y responder esta solicitud.</p>
       </main>
     </>
+  );
+}
+
+function Meta({ k, v }: { k: string; v: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="text-[11px] text-muted">{k}</dt>
+      <dd className="font-display font-medium">{v}</dd>
+    </div>
   );
 }

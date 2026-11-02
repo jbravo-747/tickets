@@ -174,7 +174,7 @@ function revalidateTicket(id: string, token?: string) {
 }
 
 /** Aplica cambios y deja un evento SYSTEM por cada campo que cambió. */
-async function applyTicketChanges(id: string, changes: { status?: Status; priority?: Priority; dueDate?: Date | null }, by: string) {
+async function applyTicketChanges(id: string, changes: { status?: Status; priority?: Priority; dueDate?: Date | null }, by: string, reason?: string) {
   const t = await prisma.ticket.findUnique({ where: { id } });
   if (!t) return null;
   const events: string[] = [];
@@ -184,9 +184,18 @@ async function applyTicketChanges(id: string, changes: { status?: Status; priori
     events.push(`Fecha de entrega: ${changes.dueDate ? formatDate(changes.dueDate) : "sin fecha"}`);
   }
   if (events.length === 0) return t;
+  const closing = (s?: Status) => s === "RESUELTO" || s === "CERRADO";
+  const resolvedAt =
+    changes.status === undefined ? undefined
+    : closing(changes.status) ? (closing(t.status) ? t.resolvedAt ?? new Date() : new Date())
+    : null;
   await prisma.$transaction([
-    prisma.ticket.update({ where: { id }, data: changes }),
-    ...events.map((body) => prisma.message.create({ data: { ticketId: id, authorType: "SYSTEM", authorName: by, body: `${body} (${by})` } })),
+    prisma.ticket.update({ where: { id }, data: { ...changes, ...(resolvedAt !== undefined ? { resolvedAt } : {}) } }),
+    ...events.map((body, i) =>
+      prisma.message.create({
+        data: { ticketId: id, authorType: "SYSTEM", authorName: by, body: `${body} (${by})${reason && i === events.length - 1 ? ` · Motivo: ${reason}` : ""}` },
+      }),
+    ),
   ]);
   return t;
 }
@@ -254,4 +263,19 @@ export async function markAnswered(id: string) {
   await requireAdmin();
   const t = await prisma.ticket.update({ where: { id }, data: { awaitingStaff: false } });
   revalidateTicket(id, t.token);
+}
+
+/** Reprogramar fecha tentativa con motivo (calendario). */
+export async function rescheduleTicket(_prev: string | null, fd: FormData): Promise<string | null> {
+  await requireAdmin();
+  const id = str(fd, "ticketId");
+  const due = parseISODate(str(fd, "dueDate"));
+  const reason = str(fd, "reason").slice(0, 300);
+  if (!id) return "Elige un ticket.";
+  if (!due) return "Elige una fecha válida.";
+  const t = await applyTicketChanges(id, { dueDate: due }, await staffName(), reason || undefined);
+  if (!t) return "Ticket no encontrado.";
+  revalidateTicket(id, t.token);
+  revalidatePath("/admin/calendario");
+  return "ok";
 }

@@ -113,6 +113,8 @@ model Ticket {
   token          String       @unique @default(cuid())
   /// true cuando el último mensaje público es del solicitante (pendiente de respuesta del equipo)
   awaitingStaff  Boolean      @default(true)
+  /// Cuándo pasó a Resuelto/Cerrado (null si está abierto). Para medir cumplimiento de fechas.
+  resolvedAt     DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   messages       Message[]

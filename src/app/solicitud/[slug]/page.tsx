@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { PublicHeader } from "@/components/PublicHeader";
 import { TicketForm } from "./TicketForm";
+import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function SolicitudPage({ params }: { params: Params }) {
           types={org.requestTypes.map((t) => t.name)}
           fields={org.fields.map(({ id, label, type, options, required }) => ({ id, label, type, options, required }))}
         />
-        <p className="mt-6 text-center text-xs text-slate-500">Nunca envíes contraseñas a través de este formulario.</p>
+        <p className="mt-4 flex items-center justify-center gap-1 text-[12px] text-muted"><Icon name="lock" size={14} />Nunca envíes contraseñas a través de este formulario.</p>
       </main>
     </>
   );
