@@ -33,7 +33,7 @@ El área y el tipo se guardan como texto en el ticket, así que editar los catá
    | Variable | Valor |
    |---|---|
    | `DATABASE_URL` | URL **con pooling** (en Neon, la que tiene `-pooler` en el host) |
-   | `DIRECT_URL` | URL **directa**, sin pooler (para migraciones) |
+   | `DIRECT_URL` | URL **directa**, sin pooler (para migraciones). Opcional con la integración de Neon: se toma de `DATABASE_URL_UNPOOLED` |
    | `ADMIN_PASSWORD` | contraseña de `/admin` |
    | `SESSION_SECRET` | resultado de `openssl rand -hex 32` |
 
