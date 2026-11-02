@@ -9,8 +9,9 @@ import type { FieldType, Priority, Status } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { SESSION_COOKIE, sessionToken } from "@/lib/session";
-import { PRIORITIES, PRIORITY_LABEL, STATUSES, STATUS_LABEL, formatDate, parseISODate, toISODate } from "@/lib/constants";
+import { LOGO_PREFIX, LOGO_TYPES, PRIORITIES, PRIORITY_LABEL, STATUSES, STATUS_LABEL, formatDate, parseISODate, toISODate } from "@/lib/constants";
 import { parseAttachments } from "@/lib/attachments";
+import { del, head } from "@vercel/blob";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -78,13 +79,38 @@ export async function createOrganization(_prev: string | null, fd: FormData): Pr
 
 export async function updateOrganization(id: string, _prev: string | null, fd: FormData): Promise<string | null> {
   await requireAdmin();
+  if (fd.get("uploading")) return "Espera a que termine de subir el logo.";
   const parsed = readOrg(fd);
   if (!parsed.success) return parsed.error.issues[0].message;
   if (await slugTaken(parsed.data.slug, id)) return "Ya existe una organización con ese identificador.";
+  // Logo: nuevo (pathname subido a Blob), quitar, o sin cambio
+  const current = await prisma.organization.findUnique({ where: { id }, select: { logoPathname: true } });
+  let logoPathname: string | null | undefined;
+  const newLogo = str(fd, "logo");
+  if (newLogo && newLogo !== current?.logoPathname) {
+    if (!newLogo.startsWith(LOGO_PREFIX) || newLogo.includes("..")) return "Logo no válido.";
+    try {
+      const meta = await head(newLogo);
+      if (!LOGO_TYPES.includes(meta.contentType)) return "El logo debe ser PNG, JPG o WebP.";
+    } catch {
+      return "No se encontró el logo; vuelve a subirlo.";
+    }
+    logoPathname = newLogo;
+  } else if (fd.get("removeLogo") === "on") {
+    logoPathname = null;
+  }
   await prisma.organization.update({
     where: { id },
-    data: { ...parsed.data, active: fd.get("active") === "on", allowOtherType: fd.get("allowOtherType") === "on" },
+    data: {
+      ...parsed.data,
+      active: fd.get("active") === "on",
+      allowOtherType: fd.get("allowOtherType") === "on",
+      ...(logoPathname !== undefined ? { logoPathname } : {}),
+    },
   });
+  if (logoPathname !== undefined && current?.logoPathname) {
+    await del(current.logoPathname).catch(() => {});
+  }
   revalidatePath(`/admin/organizaciones/${id}`);
   return "Guardado.";
 }

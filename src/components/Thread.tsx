@@ -28,7 +28,7 @@ export function AttachmentList({ files, token }: { files: ThreadAttachment[]; to
       {images.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {images.map((f) => (
-            <a key={f.id} href={fileHref(f.id, token)} target="_blank" rel="noopener" title={f.name} className="block overflow-hidden rounded border border-line hover:border-[#94a3b8]">
+            <a key={f.id} href={fileHref(f.id, token)} target="_blank" rel="noopener" title={f.name} className="block overflow-hidden rounded border border-line hover:border-line-hover">
               {/* eslint-disable-next-line @next/next/no-img-element -- archivo privado servido por la API */}
               <img src={fileHref(f.id, token)} alt={f.name} className="h-24 w-24 object-cover" loading="lazy" />
             </a>
@@ -39,7 +39,7 @@ export function AttachmentList({ files, token }: { files: ThreadAttachment[]; to
         <ul className="flex flex-wrap gap-2">
           {others.map((f) => (
             <li key={f.id}>
-              <a href={fileHref(f.id, token)} target="_blank" rel="noopener" className="inline-flex h-8 items-center gap-1.5 rounded border border-line bg-canvas px-2 hover:border-[#94a3b8]">
+              <a href={fileHref(f.id, token)} target="_blank" rel="noopener" className="inline-flex h-8 items-center gap-1.5 rounded border border-line bg-canvas px-2 hover:border-line-hover">
                 <Icon name="description" size={16} className="text-muted" />
                 <span className="max-w-56 truncate">{f.name}</span>
                 <span className="tnum text-[11px] text-muted">{formatBytes(f.size)}</span>
@@ -53,10 +53,10 @@ export function AttachmentList({ files, token }: { files: ThreadAttachment[]; to
 }
 
 const NODE: Record<"system" | "staff" | "internal" | "requester", { icon: IconName; node: string; card: string; title: string }> = {
-  system: { icon: "sync", node: "bg-[#f1f5f9] border-[#cbd5e1] text-steel", card: "", title: "" },
-  staff: { icon: "mark_email_read", node: "bg-primary border-primary text-white", card: "border-[#bfdbfe] bg-white", title: "text-primary-hover" },
-  internal: { icon: "lock", node: "bg-[#d97706] border-[#d97706] text-white", card: "border-[#fde68a] bg-[#fffbeb]", title: "text-[#92400e]" },
-  requester: { icon: "person", node: "bg-white border-[#cbd5e1] text-steel", card: "border-line bg-white", title: "text-ink" },
+  system: { icon: "sync", node: "bg-canvas border-line text-muted", card: "", title: "" },
+  staff: { icon: "mark_email_read", node: "bg-white border-line-strong text-primary-ink", card: "border-line bg-white", title: "text-ink" },
+  internal: { icon: "lock", node: "bg-white border-note-line text-note-ink", card: "border-note-line bg-note-bg", title: "text-note-ink" },
+  requester: { icon: "person", node: "bg-white border-line-strong text-steel", card: "border-line bg-white", title: "text-ink" },
 };
 
 /**
@@ -72,13 +72,13 @@ export function Thread({ messages, token }: { messages: ThreadMessage[]; token?:
   }
   return (
     <ol className="relative space-y-3 pl-8">
-      <span aria-hidden className="absolute bottom-3 left-[11px] top-2 w-px bg-line-strong" />
+      <span aria-hidden className="absolute bottom-3 left-[11px] top-2 w-px bg-line" />
       {messages.map((m) => {
         const kind = m.authorType === "SYSTEM" ? "system" : m.internal ? "internal" : m.authorType === "STAFF" ? "staff" : "requester";
         const s = NODE[kind];
         return (
           <li key={m.id} className="relative">
-            <span className={`absolute -left-8 top-1.5 flex h-6 w-6 items-center justify-center rounded border ${s.node}`}>
+            <span className={`absolute -left-8 top-1.5 flex h-6 w-6 items-center justify-center rounded-full border ${s.node}`}>
               <Icon name={s.icon} size={14} />
             </span>
             {kind === "system" ? (
@@ -94,7 +94,7 @@ export function Thread({ messages, token }: { messages: ThreadMessage[]; token?:
                     <span className="text-[12px] text-muted">
                       {kind === "requester" ? "Solicitante" : kind === "internal" ? "Nota interna" : token ? "Equipo de soporte" : "Respuesta pública"}
                     </span>
-                    {kind === "internal" && <span className="badge border-[#fde68a] bg-white text-[#92400e]"><Icon name="lock" size={12} />Solo equipo</span>}
+                    
                   </div>
                   <time className="tnum text-[11px] text-muted" dateTime={m.createdAt.toISOString()} title={formatDateTime(m.createdAt)}>{relativeTime(m.createdAt)}</time>
                 </header>

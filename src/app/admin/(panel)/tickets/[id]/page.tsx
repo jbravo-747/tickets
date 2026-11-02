@@ -63,7 +63,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
           <div className="flex flex-wrap items-center gap-1.5">
             <StatusBadge status={t.status} />
             <PriorityBadge priority={t.priority} />
-            {t.awaitingStaff && open && <span className="badge border-[#bfdbfe] bg-[#eff6ff] text-primary-hover"><Icon name="forum" size={12} />Sin respuesta</span>}
+            {t.awaitingStaff && open && <span className="badge bg-white text-primary-ink"><Icon name="forum" size={13} />Sin respuesta</span>}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -88,28 +88,26 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
       {/* Encabezado maestro + indicador de plazo */}
       <section className="panel flex flex-col justify-between gap-5 p-5 lg:flex-row lg:items-center">
         <div className="min-w-0 max-w-3xl space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-steel">
-            <span className="flex items-center gap-1 rounded-[3px] border border-[#bfdbfe] bg-[#eff6ff] px-1.5 py-0.5 font-semibold text-primary-hover">
-              <Icon name="schedule" size={14} />Creado {relativeTime(t.createdAt)}
-            </span>
-            <span className="text-[#94a3b8]">•</span>
+          <div className="flex flex-wrap items-center gap-2 text-[12px] text-steel">
+            <span className="flex items-center gap-1"><Icon name="schedule" size={14} className="text-muted" />Creado {relativeTime(t.createdAt)}</span>
+            <span className="text-line-hover">•</span>
             <span className="flex items-center gap-1"><Icon name="apartment" size={14} className="text-muted" />{t.organization.name}</span>
-            <span className="text-[#94a3b8]">•</span>
+            <span className="text-line-hover">•</span>
             <span className="flex items-center gap-1"><Icon name="label" size={14} className="text-muted" />{t.areaName}</span>
           </div>
           <h1 className="text-[20px] font-semibold leading-7 tracking-tight">
-            <span className="ticket-id text-primary">{ticketCode(t.folio)}</span>: {ticketTitle(t.description, 110)}
+            <span className="ticket-id text-muted">{ticketCode(t.folio)}</span> {ticketTitle(t.description, 110)}
           </h1>
         </div>
         <div className="flex w-full flex-none items-center gap-4 rounded-lg border border-line bg-canvas p-4 lg:w-80">
-          <Icon name={due.tone === "danger" ? "warning" : "hourglass_top"} size={28} className={due.tone === "danger" ? "text-[#dc2626]" : due.tone === "warn" ? "text-[#d97706]" : "text-primary"} />
+          <Icon name={due.tone === "danger" ? "warning" : "hourglass_top"} size={28} className={due.tone === "danger" ? "text-danger" : due.tone === "warn" ? "text-warn" : "text-primary-ink"} />
           <div className="min-w-0 flex-1">
             <div className="label-caps">Fecha tentativa de entrega</div>
             <div className="font-display tnum text-[16px] font-semibold">{t.dueDate ? formatDate(t.dueDate, { dateStyle: "full" }) : "Sin fecha asignada"}</div>
             {gauge ? (
               <>
                 <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-line"><div className="h-full" style={{ width: `${gauge.pct}%`, background: gauge.color }} /></div>
-                <div className={`mt-1 text-[12px] font-medium ${due.tone === "danger" ? "text-[#b91c1c]" : due.tone === "warn" ? "text-[#b45309]" : "text-[#15803d]"}`}>{due.label}</div>
+                <div className={`mt-1 text-[12px] font-medium ${due.tone === "danger" ? "text-danger" : due.tone === "warn" ? "text-warn" : "text-ok"}`}>{due.label}</div>
               </>
             ) : (
               <div className="text-[12px] text-muted">{open ? "Asígnala en Propiedades" : `Cerrado ${t.resolvedAt ? relativeTime(t.resolvedAt) : ""}`}</div>
@@ -122,7 +120,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
         <section className="flex flex-col gap-5 lg:col-span-8">
           {/* Reporte original */}
           <article className="panel">
-            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1f5f9] px-5 py-3">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-subtle px-5 py-3">
               <div className="flex items-center gap-3">
                 <Avatar name={t.requesterName} size={36} />
                 <div>
@@ -130,7 +128,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
                   <div className="text-[12px] text-muted">{t.requesterEmail} · {t.areaName}</div>
                 </div>
               </div>
-              <time className="tnum flex items-center gap-1 font-mono text-[11px] text-steel" dateTime={t.createdAt.toISOString()}>
+              <time className="tnum flex items-center gap-1 text-[12px] text-muted" dateTime={t.createdAt.toISOString()}>
                 <Icon name="schedule" size={14} className="text-muted" />{formatDateTime(t.createdAt)}
               </time>
             </header>
@@ -142,7 +140,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
 
           {/* Historial */}
           <div className="flex items-center gap-2">
-            <Icon name="timeline" size={20} className="text-primary" />
+            <Icon name="timeline" size={20} className="text-primary-ink" />
             <h2 className="text-[16px] font-semibold">Historial de seguimiento</h2>
             <span className="counter">{t.messages.length}</span>
             <span className="text-[12px] text-muted">{publicCount} mensaje{publicCount === 1 ? "" : "s"}</span>
@@ -155,14 +153,14 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
         {/* Columna de propiedades */}
         <aside className="flex flex-col gap-5 lg:col-span-4">
           <div className="panel">
-            <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="flag" size={16} className="text-primary" />Estado</span></div>
+            <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="flag" size={16} className="text-primary-ink" />Estado</span></div>
             <div className="grid grid-cols-2 gap-1.5 p-4">
               {STATUSES.map((s) => (
                 <form key={s} action={setStatus.bind(null, t.id)}>
                   <input type="hidden" name="status" value={s} />
                   <button
                     disabled={s === t.status} aria-pressed={s === t.status}
-                    className={`btn w-full justify-start ${s === t.status ? `${STATUS_STYLE[s].badge} !opacity-100 font-semibold` : "btn-secondary"}`}
+                    className={`btn w-full justify-start ${s === t.status ? "border-ink bg-ink !opacity-100 text-white" : "btn-secondary"}`}
                   >
                     <span className={`badge-dot ${STATUS_STYLE[s].dot}`} />{STATUS_LABEL[s]}
                   </button>
@@ -172,7 +170,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
           </div>
 
           <form action={updateTicket.bind(null, t.id)} className="panel">
-            <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="tag" size={16} className="text-primary" />Propiedades del ticket</span></div>
+            <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="tag" size={16} className="text-primary-ink" />Propiedades del ticket</span></div>
             <div className="space-y-3 p-4">
               <input type="hidden" name="status" value={t.status} />
               <label className="block">
@@ -189,19 +187,19 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
             </div>
           </form>
 
-          <dl className="panel divide-y divide-[#f1f5f9]">
-            <div className="panel-header !border-b-0"><span className="flex items-center gap-1.5"><Icon name="description" size={16} className="text-primary" />Datos de la solicitud</span></div>
+          <dl className="panel divide-y divide-subtle">
+            <div className="panel-header !border-b-0"><span className="flex items-center gap-1.5"><Icon name="description" size={16} className="text-primary-ink" />Datos de la solicitud</span></div>
             <Row icon="domain" k="Organización" v={t.organization.name} />
-            <Row icon="person" k="Solicitante" v={<>{t.requesterName}<a href={`mailto:${t.requesterEmail}?subject=${encodeURIComponent(`Solicitud ${ticketCode(t.folio)}`)}`} className="block truncate text-[12px] text-primary hover:underline">{t.requesterEmail}</a></>} />
+            <Row icon="person" k="Solicitante" v={<>{t.requesterName}<a href={`mailto:${t.requesterEmail}?subject=${encodeURIComponent(`Solicitud ${ticketCode(t.folio)}`)}`} className="block truncate text-[12px] text-primary-ink hover:underline">{t.requesterEmail}</a></>} />
             <Row icon="apartment" k="Área" v={t.areaName} />
-            <Row icon="label" k="Tipo" v={<span className="flex flex-wrap items-center gap-1.5">{t.requestType}{t.typeNotListed && <span className="badge border-[#ddd6fe] bg-[#f5f3ff] text-[#5b21b6]">No listado</span>}</span>} />
+            <Row icon="label" k="Tipo" v={<span className="flex flex-wrap items-center gap-1.5">{t.requestType}{t.typeNotListed && <span className="text-[12px] text-muted">(no listado)</span>}</span>} />
             {extra.map(([k, v]) => <Row key={k} icon="tag" k={k} v={v} />)}
             <Row icon="history" k="Última actualización" v={<span className="tnum">{formatDateTime(t.updatedAt)}</span>} />
           </dl>
 
           <div className="panel">
             <div className="panel-header">
-              <span className="flex items-center gap-1.5"><Icon name="history" size={16} className="text-primary" />Otros tickets del solicitante</span>
+              <span className="flex items-center gap-1.5"><Icon name="history" size={16} className="text-primary-ink" />Otros tickets del solicitante</span>
               <span className="counter">{others.length}</span>
             </div>
             {others.length === 0 ? (
@@ -210,7 +208,7 @@ export default async function TicketDetail({ params }: { params: Promise<{ id: s
               <ul className="space-y-1.5 p-3">
                 {others.map((o) => (
                   <li key={o.id}>
-                    <Link href={`/admin/tickets/${o.id}`} className="block rounded border border-line bg-canvas p-2 hover:border-[#94a3b8]">
+                    <Link href={`/admin/tickets/${o.id}`} className="block rounded border border-line bg-canvas p-2 hover:border-line-hover">
                       <div className="flex items-center justify-between gap-2"><TicketId folio={o.folio} /><StatusBadge status={o.status} /></div>
                       <p className="mt-1 truncate text-[12px] text-ink-2">{ticketTitle(o.description)}</p>
                       <span className="tnum text-[11px] text-muted">{relativeTime(o.createdAt)}</span>

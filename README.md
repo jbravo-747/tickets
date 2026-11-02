@@ -13,13 +13,16 @@ Sistema de solicitudes de soporte con Next.js 15, Prisma y PostgreSQL.
 
 ## Diseño
 
-La interfaz sigue la guía **"Executive Service Operations"** (estilo de consola ITSM):
-- **Colores**: primario cobalto `#1d4ed8`; severidades P1 rojo, P2 ámbar, P3 cobalto y P4 verde. El color se usa solo para comunicar estado.
-- **Tipografía**: Geist para títulos, etiquetas e IDs; Inter para textos; números tabulares.
-- **Formas**: radio de 4 px en controles y 8 px en paneles, sin píldoras salvo en contadores, y bordes finos en lugar de sombras.
-- **Íconos**: Material Symbols. Solo se descargan los listados en `src/components/Icon.tsx`.
+La interfaz sigue la guía **"Organic Executive Precision"**:
+- **Neutros cálidos**: fondo `#fbfbfa`, campos de tipo pozo `#f4f4f2`, bordes `#ecece7` y texto `#1c1917`. Las tarjetas usan sombra ambiental suave en lugar de bordes marcados.
+- **Tipografía**: Geist en toda la interfaz, con números tabulares en IDs y fechas.
+- **Formas**: radio de 8 px en campos, 12 px en botones y 16 px en tarjetas.
+- **Color de acento por organización**: se toma de `themeColor`. `src/lib/accent.ts` deriva tonos accesibles: el texto sobre el acento (blanco u oscuro) y la versión del acento usada como texto, con contraste de al menos 4.5:1 en modo claro y oscuro.
+- **Logo por organización**: se sube desde el admin a Vercel Blob y se sirve en `/api/logos/<id>`.
+- **Modo oscuro**: botón en los encabezados. Recuerda la elección en `localStorage` y, si no hay elección, sigue al sistema.
+- **Prioridades y estados**: se indican con un punto de color sobre fondo neutro, sin franjas laterales.
 
-Los tokens y las clases de componentes (`btn`, `input`, `badge`, `panel`, `data-table`…) están en `src/app/globals.css`.
+Los tokens (claro y oscuro) y las clases de componentes (`btn`, `input`, `input-wrap`, `badge`, `panel`, `data-table`…) están en `src/app/globals.css`.
 
 ## Arranque local
 

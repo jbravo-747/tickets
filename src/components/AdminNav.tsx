@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Icon, type IconName } from "./Icon";
+import { Brand, type BrandOrg } from "./Brand";
 
 type Item = { href: string; label: string; icon: IconName; count?: number; external?: boolean };
 
-export function AdminNav({ openCount, pendingCount, env }: { openCount: number; pendingCount: number; env: string }) {
+export function AdminNav({ openCount, pendingCount, env, brand }: { openCount: number; pendingCount: number; env: string; brand: BrandOrg }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const ops: Item[] = [
@@ -32,9 +33,9 @@ export function AdminNav({ openCount, pendingCount, env }: { openCount: number; 
       <Link
         key={it.href} href={it.href} onClick={() => setOpen(false)} target={it.external ? "_blank" : undefined}
         aria-current={active ? "page" : undefined}
-        className={`flex h-8 items-center gap-2 rounded border px-2 text-[13px] transition-colors ${active ? "border-[#bfdbfe] bg-[#eff6ff] font-semibold text-primary-hover" : "border-transparent text-steel hover:bg-[#f1f5f9] hover:text-ink"}`}
+        className={`flex h-8 items-center gap-2 rounded border px-2 text-[13px] transition-colors ${active ? "border-line bg-white font-medium text-ink shadow-[0_1px_2px_rgba(15,23,42,.05)]" : "border-transparent text-steel hover:bg-subtle hover:text-ink"}`}
       >
-        <Icon name={it.icon} size={18} className={active ? "text-primary" : "text-muted"} />
+        <Icon name={it.icon} size={18} className={active ? "text-primary-ink" : "text-muted"} />
         <span className="flex-1 truncate">{it.label}</span>
         {it.external && <Icon name="open_in_new" size={14} className="text-muted" />}
         {it.count !== undefined && it.count > 0 && <span className="counter">{it.count}</span>}
@@ -53,8 +54,7 @@ export function AdminNav({ openCount, pendingCount, env }: { openCount: number; 
       >
         <div>
           <div className="flex h-14 items-center gap-2 border-b border-line bg-white px-4">
-            <span className="font-display flex h-7 w-7 items-center justify-center rounded bg-primary text-[14px] font-bold text-white">M</span>
-            <span className="font-display text-[15px] font-semibold tracking-tight">Mesa de ayuda</span>
+            <Brand org={brand} />
           </div>
           <nav aria-label="Operaciones" className="space-y-0.5 px-3 pt-4">
             <div className="label-caps px-2 pb-1.5 text-muted">Operaciones</div>
@@ -67,7 +67,7 @@ export function AdminNav({ openCount, pendingCount, env }: { openCount: number; 
         </div>
         <div className="flex items-center justify-between border-t border-line bg-white px-4 py-3">
           <span className="flex items-center gap-2 text-[12px] text-steel">
-            <span className={`h-2 w-2 rounded-full ${env === "production" ? "bg-[#16a34a]" : "bg-[#d97706]"}`} />
+            <span className={`h-2 w-2 rounded-full ${env === "production" ? "bg-p4" : "bg-p2"}`} />
             {env === "production" ? "Producción" : env === "preview" ? "Preview" : "Local"}
           </span>
           <span className="font-mono text-[11px] text-muted">v0.3</span>

@@ -1,6 +1,6 @@
 /** Íconos Material Symbols. La lista se usa para descargar solo estos glifos (ver layout). */
 export const ICONS = [
-  "add", "alarm", "apartment", "arrow_back", "attach_file", "badge", "calendar_month", "calendar_today",
+  "add", "alarm", "dark_mode", "delete", "image", "light_mode", "lightbulb", "code", "groups", "upgrade", "dns", "build", "support_agent", "help", "arrow_forward", "cloud_upload", "restart_alt", "info", "alternate_email", "apartment", "arrow_back", "attach_file", "badge", "calendar_month", "calendar_today",
   "check", "check_circle", "chevron_left", "chevron_right", "close", "confirmation_number", "description",
   "domain", "edit_calendar", "error", "event", "filter_alt", "flag", "folder_open", "forum", "history",
   "hourglass_top", "inbox", "label", "lock", "logout", "mail", "mark_email_read", "menu", "open_in_new",

@@ -13,14 +13,14 @@ export function StaffComposer({ ticketId, currentStatus, defaultName }: { ticket
   const internal = mode === "internal";
 
   return (
-    <form key={state.attempt} action={action} className={`panel space-y-3 p-4 ${internal ? "!border-[#fde68a] !bg-[#fffbeb]" : ""}`}>
+    <form key={state.attempt} action={action} className={`panel space-y-3 p-4 ${internal ? "!border-note-line !bg-note-bg" : ""}`}>
       <input type="hidden" name="visibility" value={mode} />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div role="tablist" aria-label="Tipo de mensaje" className="inline-flex gap-0.5 rounded border border-line bg-[#f1f5f9] p-0.5">
+        <div role="tablist" aria-label="Tipo de mensaje" className="inline-flex gap-0.5 rounded-md bg-subtle p-0.5">
           {(["public", "internal"] as const).map((m) => (
             <button
               key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
-              className={`btn h-7 border-0 px-3 ${mode === m ? (m === "internal" ? "bg-[#d97706] text-white" : "bg-primary text-white") : "bg-transparent text-steel hover:text-ink"}`}
+              className={`btn h-7 border-0 px-3 ${mode === m ? (m === "internal" ? "bg-white text-note-ink shadow-[0_1px_2px_rgb(0_0_0/.08)]" : "bg-white text-ink shadow-[0_1px_2px_rgb(0_0_0/.08)]") : "bg-transparent text-steel hover:text-ink"}`}
             >
               <Icon name={m === "public" ? "public" : "lock"} size={16} />
               {m === "public" ? "Respuesta al solicitante" : "Nota interna"}
@@ -35,7 +35,7 @@ export function StaffComposer({ ticketId, currentStatus, defaultName }: { ticket
         className="input min-h-28 w-full resize-y text-[14px]"
       />
       <EvidenceUploader compact defaultValue={state.ok ? undefined : state.attachments} />
-      <div className="flex flex-wrap items-end justify-between gap-3 border-t border-[#f1f5f9] pt-3">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-t border-subtle pt-3">
         <div className="flex flex-wrap items-end gap-3">
           <label>
             <span className="field-label">Cambiar estado</span>
@@ -49,13 +49,13 @@ export function StaffComposer({ ticketId, currentStatus, defaultName }: { ticket
             <input name="authorName" defaultValue={defaultName} placeholder="Tu nombre" className="input w-44" />
           </label>
         </div>
-        <button disabled={pending} className={`btn btn-lg ${internal ? "border-[#b45309] bg-[#d97706] text-white hover:bg-[#b45309]" : "btn-primary"}`}>
+        <button disabled={pending} className={`btn btn-lg ${internal ? "btn-secondary !border-note-line !text-note-ink" : "btn-primary"}`}>
           {pending ? "Guardando…" : internal ? "Guardar nota" : "Enviar respuesta"}
           <Icon name={internal ? "lock" : "send"} size={16} />
         </button>
       </div>
-      {state.error && <p role="alert" className="text-[12px] text-[#b91c1c]">{state.error}</p>}
-      {state.ok && <p role="status" className="flex items-center gap-1 text-[12px] text-[#15803d]"><Icon name="check_circle" size={14} />Guardado.</p>}
+      {state.error && <p role="alert" className="text-[12px] text-danger">{state.error}</p>}
+      {state.ok && <p role="status" className="flex items-center gap-1 text-[12px] text-ok"><Icon name="check_circle" size={14} />Guardado.</p>}
     </form>
   );
 }

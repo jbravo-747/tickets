@@ -8,7 +8,7 @@ export function RescheduleForm({ tickets, defaultId }: { tickets: { id: string; 
   const [msg, action, pending] = useActionState(rescheduleTicket, null);
   return (
     <form action={action} className="panel">
-      <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="edit_calendar" size={16} className="text-primary" />Reprogramar fecha tentativa</span></div>
+      <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="edit_calendar" size={16} className="text-primary-ink" />Reprogramar fecha tentativa</span></div>
       <div className="space-y-3 p-4">
         <p className="text-[12px] text-steel">Cambia la fecha comprometida. El motivo queda registrado en el historial del ticket.</p>
         <label className="block">
@@ -28,8 +28,8 @@ export function RescheduleForm({ tickets, defaultId }: { tickets: { id: string; 
         </label>
         <button disabled={pending} className="btn btn-primary btn-lg w-full">{pending ? "Guardando…" : "Confirmar reprogramación"}</button>
         {msg && (msg === "ok"
-          ? <p role="status" className="flex items-center gap-1 text-[12px] text-[#15803d]"><Icon name="check_circle" size={14} />Fecha actualizada.</p>
-          : <p role="alert" className="text-[12px] text-[#b91c1c]">{msg}</p>)}
+          ? <p role="status" className="flex items-center gap-1 text-[12px] text-ok"><Icon name="check_circle" size={14} />Fecha actualizada.</p>
+          : <p role="alert" className="text-[12px] text-danger">{msg}</p>)}
       </div>
     </form>
   );

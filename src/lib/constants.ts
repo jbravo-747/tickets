@@ -14,11 +14,12 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
 export const PRIORITY_CODE: Record<Priority, string> = { URGENTE: "P1", ALTA: "P2", MEDIA: "P3", BAJA: "P4" };
 
 /** Severidades según DESIGN.md: contenedor tenue + borde + punto. */
-export const PRIORITY_STYLE: Record<Priority, { badge: string; dot: string; border: string; text: string; soft: string }> = {
-  URGENTE: { badge: "bg-[#fef2f2] text-[#991b1b] border-[#f87171]", dot: "bg-[#dc2626]", border: "border-l-[#dc2626]", text: "text-[#b91c1c]", soft: "bg-[#fef2f2] border-[#fecaca]" },
-  ALTA: { badge: "bg-[#fffbeb] text-[#92400e] border-[#fcd34d]", dot: "bg-[#d97706]", border: "border-l-[#d97706]", text: "text-[#b45309]", soft: "bg-[#fffbeb] border-[#fde68a]" },
-  MEDIA: { badge: "bg-[#eff6ff] text-[#1e40af] border-[#93c5fd]", dot: "bg-[#1d4ed8]", border: "border-l-[#1d4ed8]", text: "text-[#1d4ed8]", soft: "bg-[#eff6ff] border-[#bfdbfe]" },
-  BAJA: { badge: "bg-[#f0fdf4] text-[#166534] border-[#86efac]", dot: "bg-[#16a34a]", border: "border-l-[#16a34a]", text: "text-[#15803d]", soft: "bg-[#f0fdf4] border-[#bbf7d0]" },
+/** Prioridad: fondo neutro y color solo en el punto (los tokens p1..p4 se ajustan en modo oscuro). */
+export const PRIORITY_STYLE: Record<Priority, { badge: string; dot: string }> = {
+  URGENTE: { badge: "bg-subtle text-ink-2", dot: "bg-p1" },
+  ALTA: { badge: "bg-subtle text-ink-2", dot: "bg-p2" },
+  MEDIA: { badge: "bg-subtle text-ink-2", dot: "bg-p3" },
+  BAJA: { badge: "bg-subtle text-ink-2", dot: "bg-p4" },
 };
 
 export const STATUS_LABEL: Record<Status, string> = {
@@ -30,11 +31,11 @@ export const STATUS_LABEL: Record<Status, string> = {
 };
 
 export const STATUS_STYLE: Record<Status, { badge: string; dot: string }> = {
-  NUEVO: { badge: "bg-white text-[#0f172a] border-[#cbd5e1]", dot: "bg-[#1d4ed8]" },
-  EN_PROGRESO: { badge: "bg-[#eff6ff] text-[#1e40af] border-[#bfdbfe]", dot: "bg-[#1d4ed8]" },
-  EN_ESPERA: { badge: "bg-[#fffbeb] text-[#92400e] border-[#fde68a]", dot: "bg-[#d97706]" },
-  RESUELTO: { badge: "bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]", dot: "bg-[#16a34a]" },
-  CERRADO: { badge: "bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]", dot: "bg-[#94a3b8]" },
+  NUEVO: { badge: "bg-subtle text-ink-2", dot: "bg-dot-neutral" },
+  EN_PROGRESO: { badge: "bg-subtle text-ink-2", dot: "bg-p3" },
+  EN_ESPERA: { badge: "bg-subtle text-ink-2", dot: "bg-p2" },
+  RESUELTO: { badge: "bg-subtle text-ink-2", dot: "bg-p4" },
+  CERRADO: { badge: "bg-subtle text-muted", dot: "bg-dot-muted" },
 };
 
 export const FIELD_TYPE_LABEL: Record<FieldType, string> = {
@@ -140,12 +141,13 @@ export function dueInfo(due: Date | null, status: Status): { tone: DueTone; labe
   return { tone: "ok", label: `En ${days} días`, days };
 }
 
+/** Vencimiento como texto coloreado, sin caja (se lee como dato, no como etiqueta). */
 export const DUE_TONE_STYLE: Record<DueTone, string> = {
-  none: "bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]",
-  ok: "bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]",
-  warn: "bg-[#fffbeb] text-[#92400e] border-[#fde68a]",
-  danger: "bg-[#fef2f2] text-[#991b1b] border-[#fecaca]",
-  done: "bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]",
+  none: "!px-0 text-muted",
+  ok: "!px-0 text-muted",
+  warn: "!px-0 text-warn",
+  danger: "!px-0 font-semibold text-danger",
+  done: "!px-0 text-muted",
 };
 
 export function initials(name: string) {
@@ -156,4 +158,13 @@ export function initials(name: string) {
 export function ticketTitle(description: string, max = 90) {
   const first = description.split(/\n/)[0].trim();
   return first.length > max ? `${first.slice(0, max - 1)}…` : first;
+}
+
+// ── Logos de organización ─────────────────────────────────
+export const LOGO_PREFIX = "logos/";
+export const LOGO_MAX_SIZE = 2 * 1024 * 1024;
+export const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
+export function logoUrl(org: { id: string; logoPathname: string | null }) {
+  return org.logoPathname ? `/api/logos/${org.id}?v=${encodeURIComponent(org.logoPathname.slice(-12))}` : null;
 }

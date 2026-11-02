@@ -48,7 +48,9 @@ model Organization {
   intro          String        @default("")
   /// Nota que aparece al final del formulario
   note           String        @default("")
-  themeColor     String        @default("#5f7593")
+  themeColor     String        @default("#1d4ed8")
+  /// Logo en Vercel Blob (privado); se sirve públicamente por /api/logos/<id>
+  logoPathname   String?
   /// Permite la opción "Otro" en el tipo de solicitud
   allowOtherType Boolean       @default(true)
   active         Boolean       @default(true)

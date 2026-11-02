@@ -33,7 +33,7 @@ export function DueBadge({ due, status }: { due: Date | null; status: Status }) 
 /** ID visible del ticket: T-00012 */
 export function TicketId({ folio, className = "" }: { folio: number; className?: string }) {
   return (
-    <span className={`ticket-id inline-flex h-5 items-center rounded-[3px] border border-[#cbd5e1] bg-[#f1f5f9] px-1.5 text-[11px] text-ink ${className}`}>
+    <span className={`ticket-id inline-flex items-center text-[12px] text-ink-2 ${className}`}>
       {ticketCode(folio)}
     </span>
   );
@@ -43,7 +43,7 @@ export function Avatar({ name, size = 32, tone = "blue" }: { name: string; size?
   return (
     <span
       aria-hidden
-      className={`font-display inline-flex flex-none items-center justify-center rounded border text-[12px] font-semibold ${tone === "blue" ? "border-[#bfdbfe] bg-[#eff6ff] text-primary" : "border-line bg-[#f1f5f9] text-steel"}`}
+      className={`font-display inline-flex flex-none items-center justify-center rounded-full border text-[12px] font-semibold ${tone === "blue" ? "border-transparent bg-primary-soft text-primary-ink" : "border-transparent bg-subtle text-steel"}`}
       style={{ width: size, height: size }}
     >
       {initials(name)}

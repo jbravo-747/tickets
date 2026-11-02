@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Prisma, Priority, Status } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import {
-  OPEN_STATUSES, PRIORITIES, PRIORITY_CODE, PRIORITY_LABEL, PRIORITY_STYLE, STATUSES, STATUS_LABEL,
+  OPEN_STATUSES, PRIORITIES, PRIORITY_CODE, PRIORITY_LABEL, STATUSES, STATUS_LABEL,
   formatDate, parseTicketCode, relativeTime, ticketTitle, todayISO,
 } from "@/lib/constants";
 import { DueBadge, PriorityBadge, TicketId } from "@/components/Badges";
@@ -79,9 +79,9 @@ export default async function AdminTickets({ searchParams }: { searchParams: SP 
       <div className="panel overflow-hidden">
         <form className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
           <span className="label-caps flex items-center gap-1 text-muted"><Icon name="filter_alt" size={14} />Filtros</span>
-          <div className="flex h-8 items-center gap-1.5 rounded border border-line-strong bg-white px-2 focus-within:border-primary focus-within:shadow-[0_0_0_1px_#1d4ed8]">
-            <Icon name="search" size={14} className="text-muted" />
-            <input name="q" defaultValue={sp.q} placeholder="ID, texto o solicitante" aria-label="Buscar" className="h-full w-52 bg-transparent outline-none" />
+          <div className="input-wrap w-60">
+            <Icon name="search" size={16} />
+            <input name="q" defaultValue={sp.q} placeholder="ID, texto o solicitante" aria-label="Buscar" />
           </div>
           <select name="org" defaultValue={sp.org ?? ""} aria-label="Organización" className="input">
             <option value="">Todas las organizaciones</option>
@@ -104,19 +104,19 @@ export default async function AdminTickets({ searchParams }: { searchParams: SP 
         </form>
 
         {/* Móvil: tarjetas */}
-        <ul className="divide-y divide-[#f1f5f9] md:hidden">
+        <ul className="divide-y divide-subtle md:hidden">
           {tickets.map((t) => (
-            <li key={t.id} className={`border-l-2 px-4 py-3 ${PRIORITY_STYLE[t.priority].border}`}>
+            <li key={t.id} className="px-4 py-3">
               <div className="flex flex-wrap items-center gap-1.5">
-                <Link href={`/admin/tickets/${t.id}`}><TicketId folio={t.folio} className="!text-primary" /></Link>
+                <Link href={`/admin/tickets/${t.id}`}><TicketId folio={t.folio} /></Link>
                 <PriorityBadge priority={t.priority} short />
                 <StatusSelect status={t.status} action={setStatus.bind(null, t.id)} />
                 <DueBadge due={t.dueDate} status={t.status} />
               </div>
-              <Link href={`/admin/tickets/${t.id}`} className="font-display mt-1.5 line-clamp-2 block text-[14px] font-medium hover:text-primary">{ticketTitle(t.description, 160)}</Link>
+              <Link href={`/admin/tickets/${t.id}`} className="font-display mt-1.5 line-clamp-2 block text-[14px] font-medium hover:text-primary-ink">{ticketTitle(t.description, 160)}</Link>
               <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[12px] text-muted">
                 <span>{t.requesterName}</span><span>· {t.areaName}</span><span className="tnum">· {relativeTime(t.createdAt)}</span>
-                {t.awaitingStaff && OPEN_STATUSES.includes(t.status) && <span className="badge border-[#bfdbfe] bg-[#eff6ff] text-primary-hover">Sin respuesta</span>}
+                {t.awaitingStaff && OPEN_STATUSES.includes(t.status) && <span className="font-medium text-primary-ink">· Sin respuesta</span>}
               </div>
             </li>
           ))}
@@ -138,14 +138,14 @@ export default async function AdminTickets({ searchParams }: { searchParams: SP 
             </thead>
             <tbody>
               {tickets.map((t) => (
-                <tr key={t.id} className={`border-l-2 ${PRIORITY_STYLE[t.priority].border}`}>
-                  <td><Link href={`/admin/tickets/${t.id}`} className="hover:underline"><TicketId folio={t.folio} className="!text-primary" /></Link></td>
+                <tr key={t.id}>
+                  <td><Link href={`/admin/tickets/${t.id}`} className="hover:underline"><TicketId folio={t.folio} /></Link></td>
                   <td className="max-w-0">
-                    <Link href={`/admin/tickets/${t.id}`} className="font-display block truncate font-medium hover:text-primary hover:underline">{ticketTitle(t.description, 140)}</Link>
+                    <Link href={`/admin/tickets/${t.id}`} className="font-display block truncate font-medium hover:text-primary-ink hover:underline">{ticketTitle(t.description, 140)}</Link>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted">
                       <span className="truncate">{t.organization.name} · {t.areaName} · {t.requestType}</span>
-                      {t.typeNotListed && <span className="badge border-[#ddd6fe] bg-[#f5f3ff] text-[#5b21b6]">No listado</span>}
-                      {t.awaitingStaff && OPEN_STATUSES.includes(t.status) && <span className="badge border-[#bfdbfe] bg-[#eff6ff] text-primary-hover"><Icon name="forum" size={12} />Sin respuesta</span>}
+                      {t.typeNotListed && <span className="text-muted">· No listado</span>}
+                      {t.awaitingStaff && OPEN_STATUSES.includes(t.status) && <span className="flex items-center gap-1 font-medium text-primary-ink"><Icon name="forum" size={13} />Sin respuesta</span>}
                       {t._count.attachments > 0 && <span className="tnum flex items-center gap-0.5"><Icon name="attach_file" size={13} />{t._count.attachments}</span>}
                     </div>
                   </td>
@@ -159,7 +159,7 @@ export default async function AdminTickets({ searchParams }: { searchParams: SP 
                     <div className="tnum">{formatDate(t.dueDate)}</div>
                     <DueBadge due={t.dueDate} status={t.status} />
                   </td>
-                  <td className="tnum text-[12px] text-steel" title={formatDate(t.createdAt)}>{relativeTime(t.createdAt)}</td>
+                  <td className="tnum whitespace-nowrap text-[12px] text-steel" title={formatDate(t.createdAt)}>{relativeTime(t.createdAt)}</td>
                 </tr>
               ))}
               {tickets.length === 0 && (

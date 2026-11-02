@@ -73,8 +73,8 @@ export default async function CalendarioAdmin({ searchParams }: { searchParams: 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Breadcrumb items={[{ label: "Operaciones" }, { label: "Calendario y entregas", icon: "calendar_month" }]} />
         <div className="flex flex-wrap gap-2">
-          {overdue.length > 0 && <span className="badge border-[#fecaca] bg-[#fef2f2] text-[#991b1b]"><span className="badge-dot bg-[#dc2626]" />{overdue.length} vencido{overdue.length === 1 ? "" : "s"}</span>}
-          <span className="badge border-[#bfdbfe] bg-[#eff6ff] text-primary-hover"><span className="badge-dot bg-primary" />{monthItems.length} entregas en el mes</span>
+          {overdue.length > 0 && <span className="badge bg-white"><span className="badge-dot bg-p1" />{overdue.length} vencido{overdue.length === 1 ? "" : "s"}</span>}
+          <span className="badge bg-white"><span className="badge-dot bg-primary" />{monthItems.length} entregas en el mes</span>
         </div>
       </div>
       <PageTitle title="Calendario de entregas" subtitle="Fechas tentativas de entrega comprometidas con los solicitantes." />
@@ -83,11 +83,11 @@ export default async function CalendarioAdmin({ searchParams }: { searchParams: 
       <div className="panel flex flex-wrap items-center gap-3 px-4 py-3">
         <span className="label-caps flex items-center gap-1 text-muted"><Icon name="filter_alt" size={14} />Prioridad</span>
         <div className="flex flex-wrap gap-1.5">
-          <Link href={href({ prioridad: undefined })} className={`btn h-8 ${!prio ? "border-primary bg-[#eff6ff] text-primary-hover" : "btn-secondary"}`}>
+          <Link href={href({ prioridad: undefined })} className={`btn h-8 ${!prio ? "border-ink bg-ink text-white" : "btn-secondary"}`}>
             Todas <span className="tnum font-mono text-[11px]">({monthItems.length})</span>
           </Link>
           {PRIORITIES.map((p) => (
-            <Link key={p} href={href({ prioridad: p })} className={`btn h-8 ${prio === p ? `${PRIORITY_STYLE[p].badge} font-semibold` : "btn-secondary"}`}>
+            <Link key={p} href={href({ prioridad: p })} className={`btn h-8 ${prio === p ? "border-ink bg-ink text-white" : "btn-secondary"}`}>
               <span className={`badge-dot ${PRIORITY_STYLE[p].dot}`} />{PRIORITY_CODE[p]} {PRIORITY_LABEL[p]} <span className="tnum font-mono text-[11px]">({counts[p]})</span>
             </Link>
           ))}
@@ -105,7 +105,7 @@ export default async function CalendarioAdmin({ searchParams }: { searchParams: 
           </form>
         )}
         <span className="ml-auto flex items-center gap-1.5 text-[13px] text-steel" title="Tickets resueltos a más tardar en su fecha tentativa">
-          <Icon name="trending_up" size={16} className="text-primary" />Cumplimiento:
+          <Icon name="trending_up" size={16} className="text-primary-ink" />Cumplimiento:
           <strong className="font-display tnum text-ink">{compliance === null ? "—" : `${compliance}%`}</strong>
           {compliance !== null && <span className="text-[11px] text-muted">({onTime}/{closedWithDue.length})</span>}
         </span>
@@ -118,18 +118,17 @@ export default async function CalendarioAdmin({ searchParams }: { searchParams: 
 
         <aside className="flex flex-col gap-5 xl:col-span-4">
           {overdue.length > 0 && (
-            <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-[#dc2626] text-white"><Icon name="warning" size={16} /></span>
-                <span className="label-caps !text-[#991b1b]">Tickets vencidos</span>
-                <span className="counter ml-auto !bg-[#fecaca] !text-[#991b1b]">{overdue.length}</span>
+            <div className="panel">
+              <div className="panel-header">
+                <span className="flex items-center gap-1.5"><Icon name="warning" size={16} className="text-danger" />Vencidos</span>
+                <span className="counter">{overdue.length}</span>
               </div>
-              <ul className="space-y-2">
+              <ul className="space-y-2 p-3">
                 {overdue.slice(0, 5).map((t) => (
                   <li key={t.id}>
-                    <Link href={`/admin/tickets/${t.id}`} className="block rounded border border-[#fecaca] bg-white p-2.5 hover:border-[#f87171]">
+                    <Link href={`/admin/tickets/${t.id}`} className="block rounded border border-line bg-white p-2.5 hover:border-line-hover">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="ticket-id text-[12px] text-[#b91c1c]">{ticketCode(t.folio)}</span>
+                        <TicketId folio={t.folio} />
                         <DueBadge due={t.dueDate} status={t.status} />
                       </div>
                       <p className="font-display mt-1 truncate text-[13px] font-medium">{ticketTitle(t.description)}</p>
@@ -143,7 +142,7 @@ export default async function CalendarioAdmin({ searchParams }: { searchParams: 
 
           <div className="panel">
             <div className="panel-header">
-              <span className="flex items-center gap-1.5"><Icon name="alarm" size={16} className="text-primary" />Compromisos de hoy · {formatDate(todayDate, { day: "numeric", month: "short" })}</span>
+              <span className="flex items-center gap-1.5"><Icon name="alarm" size={16} className="text-primary-ink" />Compromisos de hoy · {formatDate(todayDate, { day: "numeric", month: "short" })}</span>
               <span className="counter">{dueToday.length}</span>
             </div>
             {dueToday.length === 0 ? (
@@ -152,7 +151,7 @@ export default async function CalendarioAdmin({ searchParams }: { searchParams: 
               <ul className="space-y-2 p-3">
                 {dueToday.map((t) => (
                   <li key={t.id}>
-                    <Link href={`/admin/tickets/${t.id}`} className={`block rounded border border-l-2 border-line bg-white p-2.5 hover:border-[#94a3b8] ${PRIORITY_STYLE[t.priority].border}`}>
+                    <Link href={`/admin/tickets/${t.id}`} className="block rounded border border-line bg-white p-2.5 hover:border-line-hover">
                       <div className="flex items-center justify-between gap-2"><TicketId folio={t.folio} /><PriorityBadge priority={t.priority} short /></div>
                       <p className="font-display mt-1 truncate text-[13px] font-medium">{ticketTitle(t.description)}</p>
                       <div className="mt-0.5 text-[11px] text-muted">{t.organization.name} · {t.areaName}</div>

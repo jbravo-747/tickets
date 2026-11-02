@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { FIELD_TYPE_LABEL } from "@/lib/constants";
+import { FIELD_TYPE_LABEL, logoUrl } from "@/lib/constants";
 import { Breadcrumb, PageTitle } from "@/components/PageHeader";
 import { Icon } from "@/components/Icon";
 import { addCatalogItem, addField, deleteCatalogItem, deleteField, moveField, toggleFieldRequired, updateOrganization } from "../../../actions";
@@ -25,14 +25,14 @@ export default async function OrganizacionDetalle({ params }: { params: Promise<
     <div className="space-y-5">
       <Breadcrumb items={[{ label: "Organizaciones", href: "/admin/organizaciones", icon: "domain" }, { label: org.name }]} />
       <PageTitle
-        title={<span className="flex items-center gap-2.5"><span className="h-7 w-1.5 rounded-sm" style={{ backgroundColor: org.themeColor }} aria-hidden />{org.name}</span>}
+        title={<span className="flex items-center gap-2.5"><span className="h-3 w-3 rounded-full" style={{ backgroundColor: org.themeColor }} aria-hidden />{org.name}</span>}
         subtitle="Textos, catálogos y preguntas del formulario público."
         actions={<Link href={`/solicitud/${org.slug}`} target="_blank" className="btn btn-secondary"><Icon name="open_in_new" size={16} />Ver formulario</Link>}
       />
 
       <section className="panel">
-        <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="description" size={16} className="text-primary" />Datos y textos</span></div>
-        <OrgForm action={updateOrganization.bind(null, org.id)} org={org} submitLabel="Guardar" />
+        <div className="panel-header"><span className="flex items-center gap-1.5"><Icon name="description" size={16} className="text-primary-ink" />Datos y textos</span></div>
+        <OrgForm action={updateOrganization.bind(null, org.id)} org={org} logoUrl={logoUrl(org)} submitLabel="Guardar" />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -42,7 +42,7 @@ export default async function OrganizacionDetalle({ params }: { params: Promise<
 
       <section className="panel">
         <div className="panel-header">
-          <span className="flex items-center gap-1.5"><Icon name="tag" size={16} className="text-primary" />Campos adicionales del ticket</span>
+          <span className="flex items-center gap-1.5"><Icon name="tag" size={16} className="text-primary-ink" />Campos adicionales del ticket</span>
           <span className="counter">{org.fields.length}</span>
         </div>
         <div className="space-y-4 p-5">
@@ -53,7 +53,7 @@ export default async function OrganizacionDetalle({ params }: { params: Promise<
               <tbody>
                 {org.fields.map((f, i) => (
                   <tr key={f.id}>
-                    <td><span className="font-medium">{f.label}</span> {f.required && <span className="badge ml-1 border-[#fecaca] bg-[#fef2f2] text-[#991b1b]">Obligatoria</span>}</td>
+                    <td><span className="font-medium">{f.label}</span> {f.required && <span className="ml-1 text-[12px] text-muted">· obligatoria</span>}</td>
                     <td className="text-[12px] text-steel">{FIELD_TYPE_LABEL[f.type]}{f.options.length > 0 && `: ${f.options.join(", ")}`}</td>
                     <td>
                       <div className="flex justify-end gap-1">
@@ -89,12 +89,12 @@ function Catalog({ title, kind, orgId, items }: { title: string; kind: "area" | 
     <section className="panel">
       <div className="panel-header"><span>{title}</span><span className="counter">{items.length}</span></div>
       <div className="space-y-3 p-4">
-        <ul className="divide-y divide-[#f1f5f9] rounded border border-line">
+        <ul className="divide-y divide-subtle rounded border border-line">
           {items.map((it) => (
             <li key={it.id} className="flex h-9 items-center justify-between pl-3 pr-1">
               {it.name}
               <form action={deleteCatalogItem.bind(null, kind, it.id, orgId)}>
-                <button className="btn-icon hover:!text-[#b91c1c]" aria-label={`Quitar ${it.name}`}><Icon name="close" size={16} /></button>
+                <button className="btn-icon hover:!text-danger" aria-label={`Quitar ${it.name}`}><Icon name="close" size={16} /></button>
               </form>
             </li>
           ))}

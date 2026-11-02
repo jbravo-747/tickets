@@ -40,11 +40,11 @@ export function Calendar({ month, items, hrefFor, ticketHref, maxPerDay = 3 }: {
 
   return (
     <section aria-labelledby="cal-title" className="panel overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#f1f5f9] px-4 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-subtle px-4 py-2.5">
         <div className="flex items-center gap-1">
           <Link href={hrefFor(prev)} className="btn-icon" aria-label="Mes anterior"><Icon name="chevron_left" /></Link>
           <h2 id="cal-title" className="flex items-center gap-1.5 px-1 text-[14px] font-semibold">
-            <Icon name="calendar_month" size={16} className="text-primary" />{title}
+            <Icon name="calendar_month" size={16} className="text-primary-ink" />{title}
           </h2>
           <Link href={hrefFor(next)} className="btn-icon" aria-label="Mes siguiente"><Icon name="chevron_right" /></Link>
         </div>
@@ -53,7 +53,7 @@ export function Calendar({ month, items, hrefFor, ticketHref, maxPerDay = 3 }: {
 
       <div className="grid grid-cols-7 border-b border-line bg-canvas">
         {WEEKDAYS.map((d, i) => (
-          <div key={d} className={`label-caps py-2 text-center ${i > 4 ? "text-muted" : ""}`}>{d}</div>
+          <div key={d} className={`py-2 text-center text-[12px] font-medium ${i > 4 ? "text-muted" : "text-steel"}`}>{d}</div>
         ))}
       </div>
       <div className="grid grid-cols-7">
@@ -65,13 +65,12 @@ export function Calendar({ month, items, hrefFor, ticketHref, maxPerDay = 3 }: {
           return (
             <div
               key={i}
-              className={`min-h-24 border-b border-r border-[#f1f5f9] p-1.5 [&:nth-child(7n)]:border-r-0 ${!day ? "bg-[#f1f5f9]/60" : weekend ? "bg-canvas" : "bg-white"} ${isToday ? "relative ring-2 ring-inset ring-primary" : ""}`}
+              className={`min-h-24 border-b border-r border-subtle p-1.5 [&:nth-child(7n)]:border-r-0 ${!day ? "bg-subtle/60" : weekend ? "bg-canvas" : "bg-white"} `}
             >
               {day && (
                 <>
                   <div className="mb-1 flex items-center justify-between">
-                    <span className={`tnum font-mono text-[11px] ${isToday ? "font-bold text-primary" : weekend ? "text-muted" : "text-steel"}`}>{String(day).padStart(2, "0")}</span>
-                    {isToday && <span className="rounded-[3px] bg-primary px-1 text-[10px] font-semibold uppercase text-white">Hoy</span>}
+                    <span className={`tnum flex h-5 min-w-5 items-center justify-center rounded-full text-[11px] ${isToday ? "bg-primary px-1 font-semibold text-on-primary" : weekend ? "text-muted" : "text-steel"}`}>{day}</span>
                   </div>
                   <ul className="space-y-1">
                     {list.slice(0, maxPerDay).map((it) => {
@@ -79,15 +78,18 @@ export function Calendar({ month, items, hrefFor, ticketHref, maxPerDay = 3 }: {
                       const s = PRIORITY_STYLE[it.priority];
                       const body = (
                         <>
-                          <span className={`ticket-id block text-[10px] ${done ? "text-muted" : s.text}`}>{ticketCode(it.folio)}</span>
-                          <span className={`block truncate text-[11px] leading-[14px] ${done ? "text-muted line-through" : "text-ink-2"}`}>{it.description}</span>
+                          <span className="flex items-center gap-1">
+                            <span className={`h-1.5 w-1.5 flex-none rounded-full ${done ? "bg-dot-muted" : s.dot}`} aria-hidden />
+                            <span className={`ticket-id text-[10px] ${done ? "text-muted" : "text-ink-2"}`}>{ticketCode(it.folio)}</span>
+                          </span>
+                          <span className={`block truncate text-[11px] leading-[14px] ${done ? "text-muted line-through" : "text-steel"}`}>{it.description}</span>
                         </>
                       );
-                      const cls = `block rounded-[3px] border border-l-2 px-1.5 py-1 ${done ? "border-line bg-white" : `${s.soft} ${s.border}`}`;
+                      const cls = "block rounded border border-line bg-white px-1.5 py-1";
                       const title = `${ticketCode(it.folio)} · ${it.description} · ${PRIORITY_CODE[it.priority]} ${PRIORITY_LABEL[it.priority]} · ${STATUS_LABEL[it.status]}`;
                       return (
                         <li key={it.id} title={title}>
-                          {ticketHref ? <Link href={ticketHref(it.id)} className={`${cls} hover:brightness-95`}>{body}</Link> : <div className={cls}>{body}</div>}
+                          {ticketHref ? <Link href={ticketHref(it.id)} className={`${cls} hover:border-line-hover`}>{body}</Link> : <div className={cls}>{body}</div>}
                         </li>
                       );
                     })}

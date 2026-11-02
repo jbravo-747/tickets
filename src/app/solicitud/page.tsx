@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { PublicHeader } from "@/components/PublicHeader";
+import { logoUrl } from "@/lib/constants";
 import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,16 @@ export default async function ElegirOrganizacion() {
           <ul className="space-y-2">
             {orgs.map((o) => (
               <li key={o.id}>
-                <Link href={`/solicitud/${o.slug}`} className="panel flex items-center justify-between border-l-[3px] px-4 py-3 hover:border-[#94a3b8]" style={{ borderLeftColor: o.themeColor }}>
-                  <span className="font-display font-semibold">{o.name}</span>
+                <Link href={`/solicitud/${o.slug}`} className="panel flex items-center justify-between px-4 py-3 hover:border-line-hover">
+                  <span className="font-display flex items-center gap-3 font-semibold">
+                    {logoUrl(o) ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- logo servido por /api/logos
+                      <img src={logoUrl(o)!} alt="" className="h-7 w-16 object-contain" />
+                    ) : (
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: o.themeColor }} aria-hidden />
+                    )}
+                    {o.name}
+                  </span>
                   <Icon name="chevron_right" className="text-muted" />
                 </Link>
               </li>
