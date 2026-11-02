@@ -1,7 +1,7 @@
 "use server";
 
 import { timingSafeEqual, createHash } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -19,10 +19,12 @@ export async function login(_prev: string | null, fd: FormData): Promise<string 
   if (!expected) return "Falta ADMIN_PASSWORD en el servidor.";
   const h = (s: string) => createHash("sha256").update(s).digest();
   if (!timingSafeEqual(h(str(fd, "password")), h(expected))) return "Contraseña incorrecta.";
+  // `secure` solo si la petición llegó por HTTPS (Vercel siempre); si no, el navegador descarta la cookie en http://IP-local.
+  const proto = (await headers()).get("x-forwarded-proto")?.split(",")[0] ?? (process.env.NODE_ENV === "production" ? "https" : "http");
   (await cookies()).set(SESSION_COOKIE, await sessionToken(), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: proto === "https",
     path: "/",
     maxAge: 60 * 60 * 12,
   });
