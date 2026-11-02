@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  /// En Vercel: URL con pooling (Neon/Vercel Postgres "pooled"). Las funciones serverless abren muchas conexiones.
+  url       = env("DATABASE_URL")
+  /// Conexión directa (sin pooler), la usa `prisma migrate`.
+  directUrl = env("DIRECT_URL")
+}
+
+/// El orden importa: se usa para ordenar la pila (URGENTE primero con orderBy desc).
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+enum Status {
+  NUEVO
+  EN_PROGRESO
+  EN_ESPERA
+  RESUELTO
+  CERRADO
+}
+
+enum FieldType {
+  TEXT
+  TEXTAREA
+  SELECT
+  DATE
+  NUMBER
+}
+
+model Organization {
+  id             String        @id @default(cuid())
+  name           String
+  slug           String        @unique
+  /// Texto introductorio del formulario
+  intro          String        @default("")
+  /// Nota que aparece al final del formulario
+  note           String        @default("")
+  themeColor     String        @default("#5f7593")
+  /// Permite la opción "Otro" en el tipo de solicitud
+  allowOtherType Boolean       @default(true)
+  active         Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  areas          Area[]
+  requestTypes   RequestType[]
+  fields         TicketField[]
+  tickets        Ticket[]
+}
+
+model Area {
+  id             String       @id @default(cuid())
+  name           String
+  order          Int          @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, name])
+}
+
+model RequestType {
+  id             String       @id @default(cuid())
+  name           String
+  order          Int          @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, name])
+}
+
+/// Campos adicionales configurables del ticket, por organización
+model TicketField {
+  id             String       @id @default(cuid())
+  label          String
+  type           FieldType    @default(TEXT)
+  options        String[]
+  required       Boolean      @default(false)
+  order          Int          @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Ticket {
+  id             String       @id @default(cuid())
+  folio          Int          @unique @default(autoincrement())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requesterEmail String
+  requesterName  String
+  /// Se guardan como texto para conservar el historial aunque cambie el catálogo
+  areaName       String
+  requestType    String
+  description    String
+  dueDate        DateTime?    @db.Date
+  priority       Priority     @default(MEDIA)
+  status         Status       @default(NUEVO)
+  /// Respuestas a campos adicionales: { [label]: valor }
+  extra          Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  comments       Comment[]
+
+  @@index([status, priority])
+  @@index([dueDate])
+}
+
+/// Notas internas del equipo (no se muestran en el tablero público)
+model Comment {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    String   @default("Admin")
+  body      String
+  createdAt DateTime @default(now())
+}
