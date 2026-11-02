@@ -66,3 +66,41 @@ export function toISODate(d: Date | null | undefined) {
 
 /** Valor del radio "Otro" en tipo de solicitud */
 export const OTHER = "__otro";
+
+// ── Evidencia (Vercel Blob privado) ───────────────────────
+export const MAX_FILES = 10;
+export const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+/** Tipos permitidos. Sin SVG/HTML para evitar contenido ejecutable. */
+export const ALLOWED_CONTENT_TYPES = [
+  "image/png", "image/jpeg", "image/gif", "image/webp", "image/heic", "image/heif",
+  "application/pdf",
+  "video/mp4", "video/quicktime", "video/webm",
+  "text/plain", "text/csv",
+  "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/zip",
+];
+export const ACCEPT_ATTR = ".png,.jpg,.jpeg,.gif,.webp,.heic,.heif,.pdf,.mp4,.mov,.webm,.txt,.csv,.doc,.docx,.xls,.xlsx,.pptx,.zip";
+export const UPLOAD_PREFIX = "evidencias/";
+
+export function formatBytes(n: number) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+export type UploadedFile = { pathname: string; name: string; size: number; contentType: string };
+
+// ── ID visible del ticket ─────────────────────────────────
+/** ID público y estable para seguimiento: folio 12 → "T-00012". */
+export function ticketCode(folio: number) {
+  return `T-${String(folio).padStart(5, "0")}`;
+}
+
+/** Acepta "T-00012", "t00012", "#12", "00012" o "12". */
+export function parseTicketCode(input: string): number | null {
+  const m = input.trim().match(/^(?:t-?|#)?0*(\d{1,9})$/i);
+  const n = m ? Number(m[1]) : NaN;
+  return Number.isInteger(n) && n > 0 ? n : null;
+}

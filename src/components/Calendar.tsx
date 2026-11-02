@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Priority, Status } from "@prisma/client";
-import { PRIORITY_LABEL, PRIORITY_STYLE, STATUS_LABEL } from "@/lib/constants";
+import { PRIORITY_LABEL, PRIORITY_STYLE, STATUS_LABEL, ticketCode } from "@/lib/constants";
 
 export type CalendarItem = { id: string; folio: number; description: string; dueDate: Date; priority: Priority; status: Status };
 
@@ -52,10 +52,10 @@ export function Calendar({ month, items, hrefFor }: { month: string; items: Cale
                     {list.slice(0, 3).map((it) => (
                       <li
                         key={it.id}
-                        title={`#${it.folio} · ${it.description} · ${PRIORITY_LABEL[it.priority]} · ${STATUS_LABEL[it.status]}`}
+                        title={`${ticketCode(it.folio)} · ${it.description} · ${PRIORITY_LABEL[it.priority]} · ${STATUS_LABEL[it.status]}`}
                         className={`truncate rounded border-l-4 bg-slate-50 px-1 ${PRIORITY_STYLE[it.priority].border} ${it.status === "RESUELTO" || it.status === "CERRADO" ? "line-through opacity-60" : ""}`}
                       >
-                        #{it.folio} {it.description}
+                        <span className="font-mono font-semibold">{ticketCode(it.folio)}</span> {it.description}
                       </li>
                     ))}
                     {list.length > 3 && <li className="px-1 text-slate-500">+{list.length - 3} más</li>}

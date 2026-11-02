@@ -30,7 +30,7 @@ export default async function SolicitudPage({ params }: { params: Params }) {
   return (
     <>
       <PublicHeader />
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto max-w-3xl px-4 py-8">
         <TicketForm
           org={{ id: org.id, name: org.name, intro: org.intro, note: org.note, themeColor: org.themeColor, allowOtherType: org.allowOtherType }}
           areas={org.areas.map((a) => a.name)}

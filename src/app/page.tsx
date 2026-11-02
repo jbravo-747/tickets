@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { OPEN_STATUSES, PRIORITIES, PRIORITY_LABEL, PRIORITY_STYLE, formatDate } from "@/lib/constants";
+import { OPEN_STATUSES, PRIORITIES, PRIORITY_LABEL, PRIORITY_STYLE, formatDate, ticketCode } from "@/lib/constants";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PriorityBadge, StatusBadge } from "@/components/Badges";
 import { Calendar } from "@/components/Calendar";
@@ -89,12 +89,13 @@ export default async function Dashboard({ searchParams }: { searchParams: SP }) 
                 {queue.map((t, i) => (
                   <li key={t.id} className={`rounded-lg border border-l-4 border-slate-200 bg-white p-3 ${PRIORITY_STYLE[t.priority].border}`}>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span className="font-mono">{i + 1}. #{t.folio}</span>
+                      <span className="text-slate-400">{i + 1}.</span>
+                      <span className="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-xs font-semibold text-white">{ticketCode(t.folio)}</span>
                       <PriorityBadge priority={t.priority} />
                       <StatusBadge status={t.status} />
                       <span>{t.requestType}</span>
                     </div>
-                    <p className="mt-1 font-medium">{t.description}</p>
+                    <p className="mt-1 line-clamp-2 font-medium">{t.description}</p>
                     <div className="mt-1 flex flex-wrap gap-x-4 text-xs text-slate-500">
                       {!org && <span>{t.organization.name}</span>}
                       <span>Área: {t.areaName}</span>

@@ -3,9 +3,11 @@
 Sistema de solicitudes de soporte con Next.js 15, Prisma y PostgreSQL.
 
 - **`/`**: tablero público con la pila de solicitudes abiertas ordenadas por prioridad, el resumen por prioridad y un calendario de fechas de entrega. Se actualiza cada minuto y no muestra datos personales.
-- **`/solicitud/<organizacion>`**: formulario público para levantar una solicitud.
+- **`/solicitud/<organizacion>`**: formulario público. Primero pide la descripción del problema, luego el tipo (con la opción "Mi problema no está en la lista"), la evidencia (archivos) y los datos de contacto.
+- **`/seguimiento`**: el solicitante consulta su ticket con el **ID** (`T-00012`) y su correo, o con el enlace privado `/seguimiento/<token>` que recibe al enviarlo. Ahí ve el estado, la conversación y puede responder con más archivos.
 - **`/admin`**: administración protegida con contraseña:
-  - tickets: filtros, prioridad, estado, fecha de entrega y notas internas;
+  - tickets: filtros (incluye "Pendientes de respuesta"), cambio rápido de estado desde la lista, prioridad y fecha de entrega;
+  - hilo de cada ticket: respuestas al solicitante y notas internas, con archivos adjuntos; cada cambio de estado, prioridad o fecha queda registrado en el hilo;
   - organizaciones: alta, textos del formulario, color, áreas, tipos de solicitud y campos adicionales.
 
 ## Arranque local
@@ -21,7 +23,15 @@ npm run dev                 # http://localhost:3000
 
 ## Modelo
 
-`Organization` → `Area`, `RequestType` y `TicketField` (catálogos y preguntas configurables) → `Ticket` → `Comment`.
+`Organization` → `Area`, `RequestType` y `TicketField` (catálogos y preguntas configurables) → `Ticket` → `Message` (hilo) y `Attachment` (evidencia).
+
+Cada ticket tiene un **ID visible** derivado de su folio (`T-00012`) para seguimiento.
+
+## Evidencia (Vercel Blob)
+
+Los archivos se suben **directo del navegador a Vercel Blob** (`/api/upload` emite un token de un solo uso), así que no aplica el límite de 4.5 MB de las funciones. El almacén es **privado**: los archivos solo se sirven por `/api/archivos/<id>` a una sesión de admin o al solicitante con su token (nunca los de notas internas). Límite: 10 archivos de 25 MB; tipos permitidos en `src/lib/constants.ts`.
+
+Requiere `BLOB_READ_WRITE_TOKEN`. En local, ponlo en `.env.local` (solo esa variable; no copies `DATABASE_URL` de producción ahí, porque `.env.local` tiene prioridad sobre `.env`).
 El área y el tipo se guardan como texto en el ticket, así que editar los catálogos no altera el historial.
 
 ## Despliegue en Vercel
@@ -36,6 +46,7 @@ El área y el tipo se guardan como texto en el ticket, así que editar los catá
    | `DIRECT_URL` | URL **directa**, sin pooler (para migraciones). Opcional con la integración de Neon: se toma de `DATABASE_URL_UNPOOLED` |
    | `ADMIN_PASSWORD` | contraseña de `/admin` |
    | `SESSION_SECRET` | resultado de `openssl rand -hex 32` |
+   | `BLOB_READ_WRITE_TOKEN` | se crea al conectar un Blob store privado (`vercel blob create-store <nombre> --access private`) |
 
 4. Opcional: carga datos de ejemplo con `DATABASE_URL=... DIRECT_URL=... npm run db:seed`.
 

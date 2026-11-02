@@ -26,6 +26,12 @@ enum Status {
   CERRADO
 }
 
+enum AuthorType {
+  STAFF
+  REQUESTER
+  SYSTEM
+}
+
 enum FieldType {
   TEXT
   TEXTAREA
@@ -99,22 +105,51 @@ model Ticket {
   dueDate        DateTime?    @db.Date
   priority       Priority     @default(MEDIA)
   status         Status       @default(NUEVO)
+  /// El solicitante eligió "Mi problema no está en la lista" y escribió su propio tipo
+  typeNotListed  Boolean      @default(false)
   /// Respuestas a campos adicionales: { [label]: valor }
   extra          Json         @default("{}")
+  /// Enlace secreto para que el solicitante dé seguimiento sin cuenta: /seguimiento/<token>
+  token          String       @unique @default(cuid())
+  /// true cuando el último mensaje público es del solicitante (pendiente de respuesta del equipo)
+  awaitingStaff  Boolean      @default(true)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  comments       Comment[]
+  messages       Message[]
+  attachments    Attachment[]
 
   @@index([status, priority])
   @@index([dueDate])
 }
 
-/// Notas internas del equipo (no se muestran en el tablero público)
-model Comment {
-  id        String   @id @default(cuid())
-  ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  author    String   @default("Admin")
-  body      String
-  createdAt DateTime @default(now())
+/// Hilo del ticket: respuestas del equipo, del solicitante, notas internas y eventos del sistema
+model Message {
+  id          String       @id @default(cuid())
+  ticketId    String
+  ticket      Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType  AuthorType
+  authorName  String
+  body        String
+  /// Nota interna: solo visible para el equipo
+  internal    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  attachments Attachment[]
+
+  @@index([ticketId, createdAt])
+}
+
+/// Evidencia en Vercel Blob (privado). Se sirve solo a través de /api/archivos/<id>.
+model Attachment {
+  id          String   @id @default(cuid())
+  ticketId    String
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  messageId   String?
+  message     Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  pathname    String   @unique
+  name        String
+  contentType String
+  size        Int
+  createdAt   DateTime @default(now())
+
+  @@index([ticketId])
 }

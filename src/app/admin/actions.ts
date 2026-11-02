@@ -9,7 +9,8 @@ import type { FieldType, Priority, Status } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { SESSION_COOKIE, sessionToken } from "@/lib/session";
-import { PRIORITIES, STATUSES, parseISODate } from "@/lib/constants";
+import { PRIORITIES, PRIORITY_LABEL, STATUSES, STATUS_LABEL, formatDate, parseISODate, toISODate } from "@/lib/constants";
+import { parseAttachments } from "@/lib/attachments";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -153,25 +154,104 @@ export async function deleteField(id: string, orgId: string) {
 }
 
 // ── Tickets ───────────────────────────────────────────────
+const NAME_COOKIE = "admin_name";
+
+async function staffName(fd?: FormData) {
+  const fromForm = fd ? str(fd, "authorName") : "";
+  const jar = await cookies();
+  if (fromForm) {
+    jar.set(NAME_COOKIE, fromForm, { httpOnly: true, sameSite: "lax", path: "/admin", maxAge: 60 * 60 * 24 * 365 });
+    return fromForm;
+  }
+  return jar.get(NAME_COOKIE)?.value || "Equipo de soporte";
+}
+
+function revalidateTicket(id: string, token?: string) {
+  revalidatePath(`/admin/tickets/${id}`);
+  revalidatePath("/admin");
+  revalidatePath("/");
+  if (token) revalidatePath(`/seguimiento/${token}`);
+}
+
+/** Aplica cambios y deja un evento SYSTEM por cada campo que cambió. */
+async function applyTicketChanges(id: string, changes: { status?: Status; priority?: Priority; dueDate?: Date | null }, by: string) {
+  const t = await prisma.ticket.findUnique({ where: { id } });
+  if (!t) return null;
+  const events: string[] = [];
+  if (changes.status && changes.status !== t.status) events.push(`Estado: ${STATUS_LABEL[t.status]} → ${STATUS_LABEL[changes.status]}`);
+  if (changes.priority && changes.priority !== t.priority) events.push(`Prioridad: ${PRIORITY_LABEL[t.priority]} → ${PRIORITY_LABEL[changes.priority]}`);
+  if (changes.dueDate !== undefined && toISODate(changes.dueDate) !== toISODate(t.dueDate)) {
+    events.push(`Fecha de entrega: ${changes.dueDate ? formatDate(changes.dueDate) : "sin fecha"}`);
+  }
+  if (events.length === 0) return t;
+  await prisma.$transaction([
+    prisma.ticket.update({ where: { id }, data: changes }),
+    ...events.map((body) => prisma.message.create({ data: { ticketId: id, authorType: "SYSTEM", authorName: by, body: `${body} (${by})` } })),
+  ]);
+  return t;
+}
+
 export async function updateTicket(id: string, fd: FormData) {
   await requireAdmin();
   const priority = str(fd, "priority") as Priority;
   const status = str(fd, "status") as Status;
   const due = str(fd, "dueDate");
   if (!PRIORITIES.includes(priority) || !STATUSES.includes(status)) return;
-  await prisma.ticket.update({
-    where: { id },
-    data: { priority, status, dueDate: due ? parseISODate(due) : null },
-  });
-  revalidatePath(`/admin/tickets/${id}`);
-  revalidatePath("/admin");
-  revalidatePath("/");
+  const t = await applyTicketChanges(id, { priority, status, dueDate: due ? parseISODate(due) : null }, await staffName());
+  if (t) revalidateTicket(id, t.token);
 }
 
-export async function addComment(ticketId: string, fd: FormData) {
+/** Cambio rápido de estado (lista de tickets y botones del detalle). */
+export async function setStatus(id: string, fd: FormData) {
+  await requireAdmin();
+  const status = str(fd, "status") as Status;
+  if (!STATUSES.includes(status)) return;
+  const t = await applyTicketChanges(id, { status }, await staffName());
+  if (t) revalidateTicket(id, t.token);
+}
+
+export type StaffReplyState = { ok?: boolean; error?: string; attempt: number; body?: string; attachments?: string };
+
+export async function replyAsStaff(ticketId: string, prev: StaffReplyState, fd: FormData): Promise<StaffReplyState> {
   await requireAdmin();
   const body = str(fd, "body");
-  if (!body) return;
-  await prisma.comment.create({ data: { ticketId, body, author: str(fd, "author") || "Admin" } });
-  revalidatePath(`/admin/tickets/${ticketId}`);
+  const rawFiles = str(fd, "attachments");
+  const fail = (error: string): StaffReplyState => ({ error, attempt: prev.attempt + 1, body, attachments: rawFiles });
+  if (fd.get("uploading")) return fail("Espera a que terminen de subir los archivos.");
+
+  const internal = str(fd, "visibility") === "internal";
+  const newStatus = str(fd, "status") as Status | "";
+  if (newStatus && !STATUSES.includes(newStatus)) return fail("Estado no válido.");
+
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  if (!ticket) return fail("Ticket no encontrado.");
+  const files = await parseAttachments(rawFiles);
+  if (!files.ok) return fail(files.error);
+  if (!body && files.files.length === 0 && !newStatus) return fail("Escribe un mensaje.");
+
+  const by = await staffName(fd);
+  if (body || files.files.length) {
+    await prisma.message.create({
+      data: {
+        ticketId,
+        authorType: "STAFF",
+        authorName: by,
+        internal,
+        body: body || "(archivos adjuntos)",
+        attachments: { create: files.files.map((f) => ({ ...f, ticketId })) },
+      },
+    });
+    // Una respuesta visible para el solicitante significa que ya no espera al equipo.
+    if (!internal) await prisma.ticket.update({ where: { id: ticketId }, data: { awaitingStaff: false } });
+  }
+  if (newStatus) await applyTicketChanges(ticketId, { status: newStatus }, by);
+
+  revalidateTicket(ticketId, ticket.token);
+  return { ok: true, attempt: prev.attempt + 1 };
+}
+
+export async function markAnswered(id: string) {
+  await requireAdmin();
+  const t = await prisma.ticket.update({ where: { id }, data: { awaitingStaff: false } });
+  revalidateTicket(id, t.token);
 }
